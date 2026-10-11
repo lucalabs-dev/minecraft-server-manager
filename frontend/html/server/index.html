@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Server Manager</title>
+
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+<header>
+    <h1>Minecraft Server Manager</h1>
+    <p>Verwalte deinen Minecraft-Server</p>
+</header>
+
+<main>
+
+    <section id="server">
+        <h2 id="server-name">Server</h2>
+
+        <p>
+            Status:
+            <span id="server-status">Offline</span>
+        </p>
+
+        <p>
+            Spieler:
+            <span id="player-count">0 / 20</span>
+        </p>
+
+        <div>
+            <button id="start-button">Start</button>
+            <button id="stop-button">Stop</button>
+            <button id="restart-button">Restart</button>
+        </div>
+
+        <div id="eula-section" style="display: none;">
+            <p>
+                You must accept the Minecraft EULA before starting the server.
+            </p>
+
+            <button id="accept-eula-button">
+                Accept EULA
+            </button>
+        </div>
+    </section>
+
+    <section id="console">
+        <h2>Console</h2>
+
+        <pre id="console-output">Waiting for server...</pre>
+    </section>
+
+</main>
+
+<script>
+
+    const serverId =
+        window.location.pathname.split("/").pop();
+
+    const startButton =
+        document.getElementById("start-button");
+
+    const stopButton =
+        document.getElementById("stop-button");
+
+    async function loadServer() {
+
+        try {
+
+            const response =
+                await fetch("/api/servers/" + serverId);
+
+            if (!response.ok) {
+                throw new Error("Failed to load server");
+            }
+
+            const server =
+                await response.json();
+
+
+            document.getElementById("server-name").textContent =
+                server.name;
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            document.getElementById("server-name").textContent =
+                "Server not found";
+
+        }
+
+    }
+
+
+    async function checkEula() {
+
+        try {
+
+            const response =
+                await fetch("/api/servers/" + serverId + "/eula");
+
+            if (!response.ok) {
+                throw new Error("Failed to load EULA status");
+            }
+
+            const eulaAccepted =
+                await response.json();
+
+
+            if (eulaAccepted === false) {
+
+                document.getElementById("eula-section").style.display =
+                    "block";
+
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+        }
+
+    }
+
+
+    document
+        .getElementById("accept-eula-button")
+        .addEventListener("click", async function () {
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/servers/" + serverId + "/eula",
+                        {
+                            method: "POST"
+                        }
+                    );
+
+
+                if (!response.ok) {
+                    throw new Error("Failed to accept EULA");
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                console.log(data);
+
+
+                document.getElementById("eula-section").style.display =
+                    "none";
+
+
+            } catch (error) {
+
+                console.error(error);
+
+            }
+
+        });
+    
+    startButton.addEventListener("click", async function () {
+
+        const response =
+            await fetch(
+                "/api/servers/" + serverId + "/start",
+                {
+                    method: "POST"
+                }
+            );
+
+        const data =
+            await response.json();
+
+        console.log(data);
+
+    });
+
+    stopButton.addEventListener("click", async function () {
+
+        const response =
+            await fetch(
+                "/api/servers/" + serverId + "/stop",
+                {
+                    method: "POST"
+                }
+            );
+
+        const data =
+            await response.json();
+
+        console.log(data);
+
+    });
+
+    loadServer();
+    checkEula();
+
+</script>
+
+</body>
+</html>
