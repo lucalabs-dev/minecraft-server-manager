@@ -423,9 +423,26 @@
             const version =
                 minecraftVersion.value;
 
+            createServerButton.disabled = true;
 
-            const response =
-                await fetch("/api/servers", {
+            const loadingCard = document.createElement("div");
+            loadingCard.className = "server-card-loading";
+
+            const spinner = document.createElement("div");
+            spinner.className = "loading-spinner";
+
+            const loadingText = document.createElement("div");
+            loadingText.textContent = "Server wird erstellt: " + serverName;
+
+            loadingCard.appendChild(spinner);
+            loadingCard.appendChild(loadingText);
+
+            serverList.appendChild(loadingCard);
+            modal.style.display = "none";
+            
+            try {
+
+                const response = await fetch("/api/servers", {
 
                     method: "POST",
 
@@ -434,22 +451,36 @@
                     },
 
                     body: JSON.stringify({
-
                         name: serverName,
                         version: version
-
                     })
 
                 });
 
+                if (!response.ok) {
+                    throw new Error("Server konnte nicht erstellt werden.");
+                }
 
-            const data =
-                await response.json();
+                const data = await response.json();
 
+                console.log(data);
 
-            console.log(data);
+                await loadServers();
 
-            loadServers();
+            } catch (error) {
+
+                console.error(error);
+
+                loadingText.textContent =
+                    "Fehler beim Erstellen des Servers.";
+
+            } finally {
+
+                createServerButton.disabled = false;
+
+                loadingCard.remove();
+
+            }
 
         });
 
@@ -501,8 +532,7 @@
                     const serverStatus =
                         document.createElement("p");
 
-                    serverStatus.textContent =
-                        "Offline";
+                    serverStatus.textContent = "Loading status...";
 
 
                     const serverArrow =
@@ -522,7 +552,34 @@
                     serverCard.appendChild(serverArrow);
 
                     serverList.appendChild(serverCard);
+                    
+                    fetch("/api/servers/" + server.id + "/status")
+                        .then(function (response) {
 
+                            if (!response.ok) {
+                                throw new Error("Failed to load server status");
+                            }
+
+                            return response.json();
+
+                        })
+                        .then(function (data) {
+
+                            const isOnline = data.status === "online";
+
+                            serverStatus.textContent = isOnline ? "Online" : "Offline";
+
+                            serverStatus.classList.toggle("status-online", isOnline);
+                            serverStatus.classList.toggle("status-offline", !isOnline);
+
+                        })
+                        .catch(function (error) {
+
+                            console.error(error);
+
+                            serverStatus.textContent = "Status unavailable";
+
+                        });
                 });
 
             } catch (error) {
@@ -550,6 +607,13 @@
 
         loadServers();
 
+        window.addEventListener("pageshow", function (event) {
+
+            if (event.persisted) {
+                loadServers();
+            }
+
+        });
     </script>
 
 </body>

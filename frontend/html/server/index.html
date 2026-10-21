@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -13,7 +12,7 @@
 
 <header>
     <h1>Minecraft Server Manager</h1>
-    <p>Verwalte deinen Minecraft-Server</p>
+    <p>Manage your Minecraft servers</p>
 </header>
 
 <main>
@@ -32,9 +31,9 @@
         </p>
 
         <div>
-            <button id="start-button">Start</button>
-            <button id="stop-button">Stop</button>
-            <button id="restart-button">Restart</button>
+            <button id="start-button" class="start-button">Start</button>
+            <button id="stop-button" class="stop-button">Stop</button>
+            <button id="restart-button" class="restart-button">Restart</button>
         </div>
 
         <div id="eula-section" style="display: none;">
@@ -49,162 +48,236 @@
     </section>
 
     <section id="console">
-        <h2>Console</h2>
+        <h2>Serverconsole</h2>
 
-        <pre id="console-output">Waiting for server...</pre>
+        <pre id="console-output"
+             style="background: #111; color: #eee; padding: 15px;
+                    height: 350px; overflow-y: auto; white-space: pre-wrap;
+                    overflow-wrap: anywhere; font-family: monospace;">Warte auf Serverausgabe...</pre>
     </section>
 
 </main>
 
 <script>
+    const serverId = window.location.pathname.split("/").pop();
+    const startButton = document.getElementById("start-button");
+    const stopButton = document.getElementById("stop-button");
+    const restartButton = document.getElementById("restart-button");
+    const consoleOutput = document.getElementById("console-output");
+    const logStream = new EventSource("/api/servers/" + serverId + "/logs");
 
-    const serverId =
-        window.location.pathname.split("/").pop();
+    logStream.onmessage = function (event) {
+        const wasAtBottom =
+            consoleOutput.scrollHeight -
+            consoleOutput.scrollTop -
+            consoleOutput.clientHeight < 30;
 
-    const startButton =
-        document.getElementById("start-button");
+        if (consoleOutput.textContent === "Warte auf Serverausgabe..." ||
+            consoleOutput.textContent === "Noch keine Serverausgabe vorhanden.") {
+            consoleOutput.textContent = "";
+        }
 
-    const stopButton =
-        document.getElementById("stop-button");
+        consoleOutput.textContent += event.data + "\n";
+
+        if (wasAtBottom) {
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+    };
+
+    logStream.onopen = function () {
+        console.log("SSE-Verbindung hergestellt.");
+    };
+
+    logStream.onerror = function () {
+        console.error("SSE-Verbindung unterbrochen. Verbindung wird erneut versucht.");
+    };
+
+    consoleOutput.addEventListener("scroll", function () {
+        const distanceFromBottom =
+            consoleOutput.scrollHeight -
+            consoleOutput.scrollTop -
+            consoleOutput.clientHeight;
+
+        userScrolledUp = distanceFromBottom > 30;
+    });
 
     async function loadServer() {
-
         try {
-
-            const response =
-                await fetch("/api/servers/" + serverId);
+            const response = await fetch("/api/servers/" + serverId);
 
             if (!response.ok) {
                 throw new Error("Failed to load server");
             }
 
-            const server =
-                await response.json();
-
+            const server = await response.json();
 
             document.getElementById("server-name").textContent =
                 server.name;
 
-
         } catch (error) {
-
             console.error(error);
 
             document.getElementById("server-name").textContent =
                 "Server not found";
-
         }
-
     }
 
+    async function loadServerStatus() {
+        try {
+            const response = await fetch(
+                "/api/servers/" + serverId + "/status"
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to load server status");
+            }
+
+            const data = await response.json();
+
+            document.getElementById("server-status").textContent =
+                data.status;
+
+            const isOnline = data.status.toLowerCase() === "online";
+
+            startButton.disabled = isOnline;
+            stopButton.disabled = !isOnline;
+            restartButton.disabled = !isOnline;
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
 
     async function checkEula() {
-
         try {
-
-            const response =
-                await fetch("/api/servers/" + serverId + "/eula");
+            const response = await fetch(
+                "/api/servers/" + serverId + "/eula"
+            );
 
             if (!response.ok) {
                 throw new Error("Failed to load EULA status");
             }
 
-            const eulaAccepted =
-                await response.json();
+            const eulaAccepted = await response.json();
 
-
-            if (eulaAccepted === false) {
-
-                document.getElementById("eula-section").style.display =
-                    "block";
-
-            }
+            document.getElementById("eula-section").style.display =
+                eulaAccepted === false ? "block" : "none";
 
         } catch (error) {
-
             console.error(error);
-
         }
-
     }
-
 
     document
         .getElementById("accept-eula-button")
         .addEventListener("click", async function () {
-
             try {
-
-                const response =
-                    await fetch(
-                        "/api/servers/" + serverId + "/eula",
-                        {
-                            method: "POST"
-                        }
-                    );
-
+                const response = await fetch(
+                    "/api/servers/" + serverId + "/eula",
+                    { method: "POST" }
+                );
 
                 if (!response.ok) {
                     throw new Error("Failed to accept EULA");
                 }
 
-
-                const data =
-                    await response.json();
-
-
-                console.log(data);
-
+                await response.json();
 
                 document.getElementById("eula-section").style.display =
                     "none";
 
-
             } catch (error) {
-
                 console.error(error);
-
             }
-
         });
-    
-    startButton.addEventListener("click", async function () {
 
-        const response =
-            await fetch(
+    startButton.addEventListener("click", async function () {
+        startButton.disabled = true;
+        stopButton.disabled = true;
+
+        try {
+            const response = await fetch(
                 "/api/servers/" + serverId + "/start",
-                {
-                    method: "POST"
-                }
+                { method: "POST" }
             );
 
-        const data =
-            await response.json();
+            if (!response.ok) {
+                throw new Error("Failed to start server");
+            }
 
-        console.log(data);
+            console.log(await response.json());
 
+            await loadServerStatus();
+            await loadServerLogs();
+
+        } catch (error) {
+            console.error(error);
+
+        } finally {
+            await loadServerStatus();
+        }
     });
 
     stopButton.addEventListener("click", async function () {
+        startButton.disabled = true;
+        stopButton.disabled = true;
 
-        const response =
-            await fetch(
+        try {
+            const response = await fetch(
                 "/api/servers/" + serverId + "/stop",
-                {
-                    method: "POST"
-                }
+                { method: "POST" }
             );
 
-        const data =
-            await response.json();
+            if (!response.ok) {
+                throw new Error("Failed to stop server");
+            }
 
-        console.log(data);
+            console.log(await response.json());
 
+            await loadServerStatus();
+            await loadServerLogs();
+
+        } catch (error) {
+            console.error(error);
+
+        } finally {
+            await loadServerStatus();
+        }
+    });
+
+    restartButton.addEventListener("click", async function () {
+        startButton.disabled = true;
+        stopButton.disabled = true;
+        restartButton.disabled = true;
+
+        try {
+            const response = await fetch(
+                "/api/servers/" + serverId + "/restart",
+                { method: "POST" }
+            );
+
+            const data = await response.json();
+            console.log(data);
+
+            if (data.ERROR) {
+                console.error(data.ERROR);
+            }
+
+            await loadServerStatus();
+
+        } catch (error) {
+            console.error(error);
+
+        } finally {
+            await loadServerStatus();
+        }
     });
 
     loadServer();
+    loadServerStatus();
     checkEula();
 
+    setInterval(loadServerStatus, 10000);
 </script>
 
 </body>

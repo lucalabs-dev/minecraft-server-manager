@@ -1,26 +1,23 @@
 ##### IMPORTS #####
 
 from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
 
 import uuid
 import json
 import requests
 import os
 import subprocess
+import threading
+import asyncio
 
 
 running_servers = {}
+server_logs = {}
+log_subscribers = {}
 
 
 router = APIRouter()
-
-@router.get("/api/status")
-def get_status():
-    return {"status": "offline"}
-
-@router.get("/api/players")
-def get_players():
-    return {"players": players_counter}
 
 @router.get("/api/versions")
 def get_versions():
@@ -85,19 +82,87 @@ def get_server(server_id: str):
 def start_server(server_id):
     process = subprocess.Popen(
             ["java", "-jar", "server.jar"],
-            cwd=("data/servers/" + server_id)
+            cwd=("data/servers/" + server_id),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
     )
     running_servers[server_id] = process
+    server_logs[server_id] = []
+    
+    threading.Thread(
+        target = read_logs,
+        args = (server_id, process)
+    ).start()
 
     return {"message": "Server is running"}
-
+ 
 @router.post("/api/servers/{server_id}/stop")
 def stop_server(server_id):
-    process = running_servers[server_id]
+    try:
+        process = running_servers[server_id]
+    except KeyError:
+        return {"ERROR": "Server can not be stopped"}
+    
     process.terminate()
+    try:
+        process.wait(timeout=60)
+    except subprocess.TimeoutExpired:
+        return {"ERROR": "Stop timeout"} 
     del running_servers[server_id]
 
-    return {"message": "Server stoped"}
+    return {"message": "Server stopped"}
+
+@router.post("/api/servers/{server_id}/restart")
+def restart_server(server_id):
+    try:
+        process = running_servers[server_id]
+    except KeyError:
+        return {"ERROR": "Server can not be restarted"}
+    
+    if process.poll() is None:
+        stop_result = stop_server(server_id)
+        if stop_result == {"message": "Server stopped"}:
+            start_server(server_id)
+        else:
+            return stop_result
+    else:
+        return {"message": "Server is not running"}
+
+    return {"message": "Server restarted"}
+
+@router.get("/api/servers/{server_id}/status")
+def get_status(server_id):
+    if server_id in running_servers:
+        process = running_servers[server_id]
+
+        if process.poll() is None:
+            return {"status": "online"}
+        else:
+            del running_servers[server_id]
+            return {"status": "offline"}
+    else:
+        return {"status": "offline"}
+
+@router.get("/api/servers/{server_id}/logs")
+async def stream_logs(server_id: str):
+    loop = asyncio.get_running_loop()
+    queue = asyncio.Queue()
+
+    log_subscribers.setdefault(server_id, []).append((loop, queue))
+
+    async def event_generator():   
+        try:
+            while True:
+                line = await queue.get()
+                yield f"data: {line}\n\n"
+        finally:
+            log_subscribers[server_id].remove((loop, queue))
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream"
+    )
 
 
 ##### EULA ENDPOINTS ##### 
@@ -278,3 +343,12 @@ def apply_default_settings(server_id):
 
     
     return {"message": "Default server properties were applied"}
+
+def read_logs(server_id, process):
+    for line in process.stdout:
+        server_logs[server_id].append(line)
+        for loop, queue in log_subscribers.get(server_id, []):
+            loop.call_soon_threadsafe(
+                queue.put_nowait,
+                line
+            )

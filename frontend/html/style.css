@@ -122,6 +122,38 @@ section h2 {
     transition: 0.15s ease;
 }
 
+.server-card-loading {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    min-height: 100px;
+    padding: 20px;
+
+    background: #12171b;
+    border: 1px solid #293139;
+    border-radius: 10px;
+
+    color: #e5e7e9;
+}
+
+.server-card-loading .loading-spinner {
+    width: 28px;
+    height: 28px;
+
+    border: 3px solid #293139;
+    border-top-color: #e5e7e9;
+    border-radius: 50%;
+
+    animation: server-loading-spin 0.8s linear infinite;
+}
+
+@keyframes server-loading-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .server-card:hover {
     background: #1d2621;
 
@@ -142,11 +174,16 @@ section h2 {
 
 .server-info p {
     margin: 0;
-
-    color: #ef4444;
-
     font-size: 14px;
     font-weight: bold;
+}
+
+.server-info p.status-online {
+    color: #22c55e;
+}
+
+.server-info p.status-offline {
+    color: #ef4444;
 }
 
 .server-arrow {
@@ -190,6 +227,28 @@ button:hover {
 
 button:active {
     transform: translateY(0);
+}
+
+.start-button:disabled,
+.stop-button:disabled,
+.restart-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #171c21;
+    border-color: #293139;
+    color: #7b838a;
+    box-shadow: none;
+    transform: none;
+}
+
+.start-button:disabled:hover,
+.stop-button:disabled:hover,
+.restart-button:disabled:hover {
+    background: #171c21;
+    border-color: #293139;
+    color: #7b838a;
+    box-shadow: none;
+    transform: none;
 }
 
 button:focus-visible {
