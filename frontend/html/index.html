@@ -4,10 +4,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Minecraft Server Manager</title>
-
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        .server-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .server-card-link {
+            flex: 1;
+            min-width: 0;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .server-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .delete-server-button {
+            padding: 8px 12px;
+            border: 1px solid #d9534f;
+            border-radius: 6px;
+            background: transparent;
+            color: #d9534f;
+            cursor: pointer;
+        }
+
+        .delete-server-button:hover {
+            background: #d9534f;
+            color: white;
+        }
+
+        .delete-server-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .server-manager-message {
+            margin: 12px 0;
+            padding: 10px 12px;
+            border-radius: 6px;
+        }
+
+        .server-manager-message.error {
+            background: #fbe9e7;
+            color: #a12622;
+        }
+
+        .server-manager-message.success {
+            background: #e8f5e9;
+            color: #256029;
+        }
+
+        .server-manager-message:empty {
+            display: none;
+        }
+
+        #new-server-name {
+            box-sizing: border-box;
+            max-width: 100%;
+        }
+    </style>
 </head>
 
 <body>
@@ -17,161 +81,94 @@
         <p>Manage your Minecraft servers</p>
     </header>
 
-
     <main>
-
         <section id="servers">
-
             <h2>My Servers</h2>
 
-            <div class="server-list" id="server-list">
+            <div
+                id="server-manager-message"
+                class="server-manager-message"
+                role="status"
+                aria-live="polite"
+            ></div>
 
-            </div>
-
+            <div class="server-list" id="server-list"></div>
 
             <button id="add-server-button" type="button">
                 + Add Server
             </button>
-
         </section>
-
     </main>
 
-
     <div id="add-server-modal" class="modal">
-
         <div class="modal-content">
 
             <div class="modal-header">
-
                 <h2>Add Server</h2>
 
                 <button
                     id="close-modal-button"
                     class="close-button"
                     type="button"
+                    aria-label="Close"
                 >
                     ×
                 </button>
-
             </div>
-
 
             <div id="server-choice" class="modal-body">
+                <p class="modal-description">What do you want to do?</p>
 
-                <p class="modal-description">
-                    What do you want to do?
-                </p>
-
-
-                <button
-                    id="new-server-button"
-                    class="choice-button"
-                    type="button"
-                >
+                <button id="new-server-button" class="choice-button" type="button">
                     Create new server
                 </button>
 
-
-                <button
-                    id="existing-server-button"
-                    class="choice-button"
-                    type="button"
-                >
+                <button id="existing-server-button" class="choice-button" type="button">
                     Select existing server
                 </button>
-
             </div>
 
+            <div id="new-server-form" class="modal-body" style="display: none;">
+                <p class="modal-description">Create new server</p>
 
-            <div
-                id="new-server-form"
-                class="modal-body"
-                style="display: none;"
-            >
-
-                <p class="modal-description">
-                    Create new server
-                </p>
-
-
-                <label for="new-server-name">
-                    Server name
-                </label>
-
+                <label for="new-server-name">Server name</label>
                 <input
                     type="text"
                     id="new-server-name"
                     placeholder="Server name"
+                    maxlength="32"
+                    autocomplete="off"
                 >
 
+                <small>1–32 characters. Allowed: letters, numbers, spaces, ".", "_" and "-".</small>
 
-                <label for="minecraft-version">
-                    Minecraft version
-                </label>
+                <label for="minecraft-version">Minecraft version</label>
 
                 <div class="version-selection">
-
                     <select id="minecraft-version">
-
-                        <option value="" selected disabled>
-                            Select version
-                        </option>
-
+                        <option value="" selected disabled>Select version</option>
                     </select>
-
                 </div>
-
 
                 <div class="modal-footer">
-
-                    <button
-                        id="new-server-back-button"
-                        type="button"
-                    >
-                        Back
-                    </button>
-
-                    <button
-                        id="create-server-button"
-                        type="button"
-                    >
-                        Create
-                    </button>
-
+                    <button id="new-server-back-button" type="button">Back</button>
+                    <button id="create-server-button" type="button">Create</button>
                 </div>
-
             </div>
 
+            <div id="existing-server-form" class="modal-body" style="display: none;">
+                <p class="modal-description">Select existing server</p>
 
-            <div
-                id="existing-server-form"
-                class="modal-body"
-                style="display: none;"
-            >
-
-                <p class="modal-description">
-                    Select existing server
-                </p>
-
-
-                <label for="existing-server-name">
-                    Server name
-                </label>
-
+                <label for="existing-server-name">Server name</label>
                 <input
                     type="text"
                     id="existing-server-name"
                     placeholder="Server name"
                 >
 
-
-                <label for="server-path">
-                    Server folder
-                </label>
+                <label for="server-path">Server folder</label>
 
                 <div class="path-input">
-
                     <input
                         type="text"
                         id="server-path"
@@ -179,249 +176,174 @@
                         readonly
                     >
 
-                    <button
-                        id="select-folder-button"
-                        type="button"
-                    >
-                        Select
-                    </button>
-
+                    <button id="select-folder-button" type="button">Select</button>
                 </div>
-
 
                 <div class="modal-footer">
-
-                    <button
-                        id="existing-server-back-button"
-                        type="button"
-                    >
-                        Back
-                    </button>
-
-                    <button
-                        id="add-existing-server-button"
-                        type="button"
-                    >
-                        Add
-                    </button>
-
+                    <button id="existing-server-back-button" type="button">Back</button>
+                    <button id="add-existing-server-button" type="button">Add</button>
                 </div>
-
             </div>
 
         </div>
-
     </div>
 
-
     <script>
+        const modal = document.getElementById("add-server-modal");
+        const addServerButton = document.getElementById("add-server-button");
+        const closeModalButton = document.getElementById("close-modal-button");
 
-        const modal =
-            document.getElementById("add-server-modal");
+        const serverChoice = document.getElementById("server-choice");
+        const newServerForm = document.getElementById("new-server-form");
+        const existingServerForm = document.getElementById("existing-server-form");
 
-        const addServerButton =
-            document.getElementById("add-server-button");
+        const newServerButton = document.getElementById("new-server-button");
+        const existingServerButton = document.getElementById("existing-server-button");
 
-        const closeModalButton =
-            document.getElementById("close-modal-button");
+        const newServerBackButton = document.getElementById("new-server-back-button");
+        const existingServerBackButton = document.getElementById("existing-server-back-button");
 
+        const createServerButton = document.getElementById("create-server-button");
+        const addExistingServerButton = document.getElementById("add-existing-server-button");
+        const selectFolderButton = document.getElementById("select-folder-button");
 
-        const serverChoice =
-            document.getElementById("server-choice");
+        const newServerNameInput = document.getElementById("new-server-name");
+        const minecraftVersion = document.getElementById("minecraft-version");
+        const serverList = document.getElementById("server-list");
+        const messageBox = document.getElementById("server-manager-message");
 
-        const newServerForm =
-            document.getElementById("new-server-form");
-
-        const existingServerForm =
-            document.getElementById("existing-server-form");
-
-
-        const newServerButton =
-            document.getElementById("new-server-button");
-
-        const existingServerButton =
-            document.getElementById("existing-server-button");
-
-
-        const newServerBackButton =
-            document.getElementById("new-server-back-button");
-
-        const existingServerBackButton =
-            document.getElementById("existing-server-back-button");
-
-
-        const createServerButton =
-            document.getElementById("create-server-button");
-
-        const addExistingServerButton =
-            document.getElementById("add-existing-server-button");
-
-        const selectFolderButton =
-            document.getElementById("select-folder-button");
-
-
-        const minecraftVersion =
-            document.getElementById("minecraft-version");
-
-        const serverList =
-            document.getElementById("server-list");
-
-
-        addServerButton.addEventListener("click", function () {
-
-            modal.style.display = "flex";
-
-            showChoice();
-
-        });
-
-
-        closeModalButton.addEventListener("click", function () {
-
-            modal.style.display = "none";
-
-        });
-
-
-        modal.addEventListener("click", function (event) {
-
-            if (event.target === modal) {
-
-                modal.style.display = "none";
-
-            }
-
-        });
-
-
-        newServerButton.addEventListener("click", function () {
-
-            serverChoice.style.display = "none";
-
-            newServerForm.style.display = "flex";
-
-        });
-
-
-        existingServerButton.addEventListener("click", function () {
-
-            serverChoice.style.display = "none";
-
-            existingServerForm.style.display = "flex";
-
-        });
-
-
-        newServerBackButton.addEventListener("click", function () {
-
-            showChoice();
-
-        });
-
-
-        existingServerBackButton.addEventListener("click", function () {
-
-            showChoice();
-
-        });
-
-
-        function showChoice() {
-
-            serverChoice.style.display = "flex";
-
-            newServerForm.style.display = "none";
-
-            existingServerForm.style.display = "none";
-
+        function showMessage(message, type = "error") {
+            messageBox.textContent = message;
+            messageBox.className = "server-manager-message " + type;
         }
 
+        function clearMessage() {
+            messageBox.textContent = "";
+            messageBox.className = "server-manager-message";
+        }
 
-        minecraftVersion.addEventListener("click", async function () {
+        function showChoice() {
+            serverChoice.style.display = "flex";
+            newServerForm.style.display = "none";
+            existingServerForm.style.display = "none";
+        }
 
+        // Read an error message from the API response.
+        async function getErrorMessage(response, fallbackMessage) {
+            try {
+                const data = await response.json();
+                return data.detail || data.error || fallbackMessage;
+            } catch {
+                return fallbackMessage;
+            }
+        }
+
+        addServerButton.addEventListener("click", function () {
+            clearMessage();
+            modal.style.display = "flex";
+            showChoice();
+        });
+
+        closeModalButton.addEventListener("click", function () {
+            modal.style.display = "none";
+        });
+
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        });
+
+        newServerButton.addEventListener("click", function () {
+            clearMessage();
+            serverChoice.style.display = "none";
+            newServerForm.style.display = "flex";
+        });
+
+        existingServerButton.addEventListener("click", function () {
+            clearMessage();
+            serverChoice.style.display = "none";
+            existingServerForm.style.display = "flex";
+        });
+
+        newServerBackButton.addEventListener("click", showChoice);
+        existingServerBackButton.addEventListener("click", showChoice);
+
+        minecraftVersion.addEventListener("focus", loadVersions);
+        minecraftVersion.addEventListener("click", loadVersions);
+
+        async function loadVersions() {
             if (minecraftVersion.dataset.loaded === "true") {
                 return;
             }
 
-
             try {
+                minecraftVersion.disabled = true;
 
-                const response =
-                    await fetch("/api/versions");
-
+                const response = await fetch("/api/versions");
 
                 if (!response.ok) {
-
-                    throw new Error("Failed to load versions");
-
+                    throw new Error("Minecraft versions could not be loaded.");
                 }
 
+                const versions = await response.json();
 
-                const versions =
-                    await response.json();
+                minecraftVersion.replaceChildren();
 
-
-                minecraftVersion.innerHTML = "";
-
-
-                const placeholder =
-                    document.createElement("option");
-
+                const placeholder = document.createElement("option");
                 placeholder.value = "";
                 placeholder.textContent = "Select version";
                 placeholder.disabled = true;
                 placeholder.selected = true;
-
-
                 minecraftVersion.appendChild(placeholder);
 
-
                 versions.forEach(function (version) {
-
-                    const option =
-                        document.createElement("option");
-
+                    const option = document.createElement("option");
                     option.value = version;
                     option.textContent = version;
-
                     minecraftVersion.appendChild(option);
-
                 });
 
-
                 minecraftVersion.dataset.loaded = "true";
-
             } catch (error) {
-
                 console.error(error);
-
-
-                minecraftVersion.innerHTML = "";
-
-
-                const option =
-                    document.createElement("option");
-
-                option.value = "";
-                option.textContent = "Failed to load versions";
-                option.disabled = true;
-                option.selected = true;
-
-
-                minecraftVersion.appendChild(option);
-
+                showMessage(error.message || "Minecraft versions could not be loaded.");
+            } finally {
+                minecraftVersion.disabled = false;
             }
-
-        });
-
+        }
 
         createServerButton.addEventListener("click", async function () {
+            clearMessage();
 
-            const serverName =
-                document.getElementById("new-server-name").value;
+            const serverName = newServerNameInput.value.trim();
+            const version = minecraftVersion.value;
 
-            const version =
-                minecraftVersion.value;
+            if (!serverName) {
+                showMessage("Server name cannot be empty.");
+                newServerNameInput.focus();
+                return;
+            }
+
+            if (serverName.length > 32) {
+                showMessage("Server name must not exceed 32 characters.");
+                newServerNameInput.focus();
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9 _.-]+$/.test(serverName)) {
+                showMessage(
+                    "Server name contains invalid characters. Allowed: letters, numbers, spaces, '.', '_' and '-'."
+                );
+                newServerNameInput.focus();
+                return;
+            }
+
+            if (!version) {
+                showMessage("Please select a Minecraft version.");
+                minecraftVersion.focus();
+                return;
+            }
 
             createServerButton.disabled = true;
 
@@ -432,190 +354,190 @@
             spinner.className = "loading-spinner";
 
             const loadingText = document.createElement("div");
-            loadingText.textContent = "Server wird erstellt: " + serverName;
+            loadingText.textContent = "Creating server: " + serverName;
 
             loadingCard.appendChild(spinner);
             loadingCard.appendChild(loadingText);
-
             serverList.appendChild(loadingCard);
+
             modal.style.display = "none";
-            
+
             try {
-
                 const response = await fetch("/api/servers", {
-
                     method: "POST",
-
                     headers: {
                         "Content-Type": "application/json"
                     },
-
                     body: JSON.stringify({
                         name: serverName,
                         version: version
                     })
-
                 });
 
                 if (!response.ok) {
-                    throw new Error("Server konnte nicht erstellt werden.");
+                    const message = await getErrorMessage(
+                        response,
+                        "Server could not be created."
+                    );
+                    throw new Error(message);
                 }
 
-                const data = await response.json();
+                await response.json();
 
-                console.log(data);
+                newServerNameInput.value = "";
+                minecraftVersion.selectedIndex = 0;
 
                 await loadServers();
-
+                showMessage("Server created successfully.", "success");
             } catch (error) {
-
                 console.error(error);
-
-                loadingText.textContent =
-                    "Fehler beim Erstellen des Servers.";
-
+                showMessage(error.message || "Error creating server.");
             } finally {
-
                 createServerButton.disabled = false;
-
                 loadingCard.remove();
-
             }
-
         });
 
+        async function deleteServer(serverId, serverName, button) {
+            const confirmed = window.confirm(
+                'Do you really want to delete "' + serverName +
+                '"?\n\nThe server files will also be deleted. This cannot be undone.'
+            );
 
-        async function loadServers() {
+            if (!confirmed) {
+                return;
+            }
+
+            clearMessage();
+            button.disabled = true;
+            button.textContent = "Deleting...";
 
             try {
-
-                const response =
-                    await fetch("/api/servers");
-
+                const response = await fetch(
+                    "/api/servers/" + encodeURIComponent(serverId),
+                    { method: "DELETE" }
+                );
 
                 if (!response.ok) {
-
-                    throw new Error("Failed to load servers");
-
+                    const message = await getErrorMessage(
+                        response,
+                        "Server could not be deleted."
+                    );
+                    throw new Error(message);
                 }
 
+                const data = await response.json().catch(() => ({}));
 
-                const servers =
-                    await response.json();
+                if (data.error || data.WARNING) {
+                    throw new Error(data.error || data.WARNING);
+                }
 
+                await loadServers();
+                showMessage('Server "' + serverName + '" was deleted.', "success");
+            } catch (error) {
+                console.error(error);
+                showMessage(error.message || "Error deleting server.");
+                button.disabled = false;
+                button.textContent = "Delete";
+            }
+        }
 
-                serverList.innerHTML = "";
+        async function loadServers() {
+            try {
+                const response = await fetch("/api/servers");
 
+                if (!response.ok) {
+                    throw new Error("Failed to load servers.");
+                }
+
+                const servers = await response.json();
+                serverList.replaceChildren();
 
                 servers.forEach(function (server) {
-
-                    const serverCard =
-                        document.createElement("a");
-
+                    const serverCard = document.createElement("div");
                     serverCard.className = "server-card";
-                    serverCard.href = "/server/" + server.id;
 
+                    const serverLink = document.createElement("a");
+                    serverLink.className = "server-card-link";
+                    serverLink.href = "/server/" + encodeURIComponent(server.id);
 
-                    const serverInfo =
-                        document.createElement("div");
-
+                    const serverInfo = document.createElement("div");
                     serverInfo.className = "server-info";
 
+                    const serverName = document.createElement("h3");
+                    serverName.textContent = server.name;
 
-                    const serverName =
-                        document.createElement("h3");
-
-                    serverName.textContent =
-                        server.name;
-
-
-                    const serverStatus =
-                        document.createElement("p");
-
+                    const serverStatus = document.createElement("p");
                     serverStatus.textContent = "Loading status...";
 
-
-                    const serverArrow =
-                        document.createElement("span");
-
-                    serverArrow.className =
-                        "server-arrow";
-
-                    serverArrow.textContent =
-                        "→";
-
+                    const serverArrow = document.createElement("span");
+                    serverArrow.className = "server-arrow";
+                    serverArrow.textContent = "→";
 
                     serverInfo.appendChild(serverName);
                     serverInfo.appendChild(serverStatus);
+                    serverLink.appendChild(serverInfo);
+                    serverLink.appendChild(serverArrow);
 
-                    serverCard.appendChild(serverInfo);
-                    serverCard.appendChild(serverArrow);
+                    const actions = document.createElement("div");
+                    actions.className = "server-card-actions";
 
+                    const deleteButton = document.createElement("button");
+                    deleteButton.type = "button";
+                    deleteButton.className = "delete-server-button";
+                    deleteButton.textContent = "Delete";
+
+                    deleteButton.addEventListener("click", function () {
+                        deleteServer(server.id, server.name, deleteButton);
+                    });
+
+                    actions.appendChild(deleteButton);
+                    serverCard.appendChild(serverLink);
+                    serverCard.appendChild(actions);
                     serverList.appendChild(serverCard);
-                    
-                    fetch("/api/servers/" + server.id + "/status")
-                        .then(function (response) {
 
+                    fetch("/api/servers/" + encodeURIComponent(server.id) + "/status")
+                        .then(function (response) {
                             if (!response.ok) {
-                                throw new Error("Failed to load server status");
+                                throw new Error("Failed to load server status.");
                             }
 
                             return response.json();
-
                         })
                         .then(function (data) {
-
                             const isOnline = data.status === "online";
 
                             serverStatus.textContent = isOnline ? "Online" : "Offline";
-
                             serverStatus.classList.toggle("status-online", isOnline);
                             serverStatus.classList.toggle("status-offline", !isOnline);
-
                         })
                         .catch(function (error) {
-
                             console.error(error);
-
                             serverStatus.textContent = "Status unavailable";
-
                         });
                 });
-
             } catch (error) {
-
                 console.error(error);
-
+                showMessage("The server list could not be loaded.");
             }
-
         }
 
-
         selectFolderButton.addEventListener("click", function () {
-
             alert("Folder selection will be implemented next.");
-
         });
-
 
         addExistingServerButton.addEventListener("click", function () {
-
             alert("Adding existing servers will be implemented next.");
-
         });
-
 
         loadServers();
 
         window.addEventListener("pageshow", function (event) {
-
             if (event.persisted) {
                 loadServers();
             }
-
         });
     </script>
 
 </body>
-
 </html>

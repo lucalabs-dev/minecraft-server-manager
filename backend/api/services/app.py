@@ -1,6 +1,5 @@
 ##### IMPORTS #####
-
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 import uuid
@@ -10,27 +9,30 @@ import os
 import subprocess
 import threading
 import asyncio
+import shutil
+import re
 
-
+##### SERVER RUNTIME MANAGMENT #####
 running_servers = {}
 server_logs = {}
 log_subscribers = {}
 
-
+##### API ROUTER #####
 router = APIRouter()
 
+
+#==============================#
+#       VERSION ENDPOINT       #
+#==============================#
 @router.get("/api/versions")
 def get_versions():
-
     response = requests.get(
         "https://fill.papermc.io/v3/projects/paper",
         headers={
             "User-Agent": "MinecraftServerManager/1.0"
         }
     )
-
     response.raise_for_status()
-
     data = response.json()
 
     versions = []
@@ -41,16 +43,27 @@ def get_versions():
     return versions
 
 
-##### SERVER ENDPOINTS #####
-
+#==============================#
+#       SERVER ENDPOINTS       #
+#==============================#
 @router.get("/api/servers")
 def get_servers():
     with open("data/servers.json", "r") as servers:
         data = json.load(servers)
+
     return data["servers"]
 
 @router.post("/api/servers")
 def create_server(server: dict):
+    name = server["name"].strip()
+    error = validate_server_names(name)
+    if error is not None:
+        raise HTTPException(
+            status_code = 400,
+            detail = error
+        )
+    
+    server["name"] = name
     server["id"] = str(uuid.uuid4())
 
     with open("data/servers.json", "r") as servers:
@@ -72,11 +85,39 @@ def get_server(server_id: str):
         data = json.load(servers)
 
     for server in data["servers"]:
-
         if server["id"] == server_id:
             return server
 
     return {"error": "Server not found"}
+
+@router.delete("/api/servers/{server_id}")
+def delete_server(server_id):
+    if not server_id in running_servers:
+        with open("data/servers.json", "r") as servers:
+            data = json.load(servers)
+
+        if  any(server["id"] == server_id for server in data["servers"]):
+            # delete server from json
+            data["servers"] = [
+                server for server in data["servers"]
+                if server["id"] != server_id
+            ]
+
+            # delete server from /data/servers/
+            try:
+                shutil.rmtree("/app/data/servers/" + server_id) 
+            except FileNotFoundError:
+                pass
+        
+            with open("data/servers.json", "w") as servers:
+                json.dump(data, servers, indent=2)
+
+            return {"message": "Server deleted"}
+        else:
+            return {"error": "Server not found"}
+    else:
+        return {"WARNING": "Server is running. Please stop the server before deleting."}
+
 
 @router.post("/api/servers/{server_id}/start")
 def start_server(server_id):
@@ -165,8 +206,9 @@ async def stream_logs(server_id: str):
     )
 
 
-##### EULA ENDPOINTS ##### 
-
+#==============================#
+#        EULA ENDPOINTS        #
+#==============================# 
 @router.get("/api/servers/{server_id}/eula")
 def get_eula_status(server_id: str):
     with open("data/servers/" + server_id + "/eula.txt", "r") as file:
@@ -195,9 +237,9 @@ def set_eula(server_id: str):
     return {"message": "EULA was accepted"}
 
 
-
-##### INTERNAL FUNCTIONS #####
-
+#==============================#
+#      INTERNAL FUNCTIONS      #
+#==============================#
 def download_server_jar(version, server_id):
     server_path = "data/servers/" + server_id
     os.makedirs(server_path)
@@ -339,7 +381,7 @@ def apply_default_settings(server_id):
     content = "\n".join(lines)
 
     with open("data/servers/" + server_id + "/server.properties", "w") as file:
-                file.write(content)
+        file.write(content)
 
     
     return {"message": "Default server properties were applied"}
@@ -352,3 +394,13 @@ def read_logs(server_id, process):
                 queue.put_nowait,
                 line
             )
+
+def validate_server_names(name):
+    if name == "":
+        return "Server name cannot be empty."
+    elif len(name) > 32:
+        return "Server name must not exceed 32 characters."
+    elif re.fullmatch(r"[a-zA-Z0-9 _.-]+", name) is None:
+        return "Server name contains invalid characters. Allowed: letters, numbers, spaces, '.', '_' and '-'."
+    else:
+        return None
