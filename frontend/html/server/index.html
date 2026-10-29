@@ -45,6 +45,8 @@
                 Accept EULA
             </button>
         </div>
+
+        <p id="error-message" role="alert" style="display: none;"></p>
     </section>
 
     <section id="console">
@@ -60,11 +62,38 @@
 
 <script>
     const serverId = window.location.pathname.split("/").pop();
+
     const startButton = document.getElementById("start-button");
     const stopButton = document.getElementById("stop-button");
     const restartButton = document.getElementById("restart-button");
     const consoleOutput = document.getElementById("console-output");
-    const logStream = new EventSource("/api/servers/" + serverId + "/logs");
+    const errorMessage = document.getElementById("error-message");
+
+    const logStream = new EventSource(
+        "/api/servers/" + serverId + "/logs"
+    );
+    
+    async function apiFetch(url, options = {}, fallback = "Request failed") {
+        const response = await fetch(url, options);
+
+        const data = await response.json().catch(() => null);
+
+        if (!response.ok) {
+            throw new Error(data?.detail || fallback);
+        }
+
+        return data;
+    }
+
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = "block";
+    }
+
+    function clearError() {
+        errorMessage.textContent = "";
+        errorMessage.style.display = "none";
+    }
 
     logStream.onmessage = function (event) {
         const wasAtBottom =
@@ -72,8 +101,10 @@
             consoleOutput.scrollTop -
             consoleOutput.clientHeight < 30;
 
-        if (consoleOutput.textContent === "Warte auf Serverausgabe..." ||
-            consoleOutput.textContent === "Noch keine Serverausgabe vorhanden.") {
+        if (
+            consoleOutput.textContent === "Warte auf Serverausgabe..." ||
+            consoleOutput.textContent === "Noch keine Serverausgabe vorhanden."
+        ) {
             consoleOutput.textContent = "";
         }
 
@@ -89,27 +120,18 @@
     };
 
     logStream.onerror = function () {
-        console.error("SSE-Verbindung unterbrochen. Verbindung wird erneut versucht.");
+        console.error(
+            "SSE-Verbindung unterbrochen. Verbindung wird erneut versucht."
+        );
     };
-
-    consoleOutput.addEventListener("scroll", function () {
-        const distanceFromBottom =
-            consoleOutput.scrollHeight -
-            consoleOutput.scrollTop -
-            consoleOutput.clientHeight;
-
-        userScrolledUp = distanceFromBottom > 30;
-    });
 
     async function loadServer() {
         try {
-            const response = await fetch("/api/servers/" + serverId);
-
-            if (!response.ok) {
-                throw new Error("Failed to load server");
-            }
-
-            const server = await response.json();
+            const server = await apiFetch(
+                "/api/servers/" + serverId,
+                {},
+                "Failed to load server"
+            );
 
             document.getElementById("server-name").textContent =
                 server.name;
@@ -119,20 +141,18 @@
 
             document.getElementById("server-name").textContent =
                 "Server not found";
+
+            showError(error.message);
         }
     }
 
     async function loadServerStatus() {
         try {
-            const response = await fetch(
-                "/api/servers/" + serverId + "/status"
+            const data = await apiFetch(
+                "/api/servers/" + serverId + "/status",
+                {},
+                "Failed to load server status"
             );
-
-            if (!response.ok) {
-                throw new Error("Failed to load server status");
-            }
-
-            const data = await response.json();
 
             document.getElementById("server-status").textContent =
                 data.status;
@@ -145,73 +165,67 @@
 
         } catch (error) {
             console.error(error);
+            showError(error.message);
         }
     }
 
     async function checkEula() {
         try {
-            const response = await fetch(
-                "/api/servers/" + serverId + "/eula"
+            const eulaAccepted = await apiFetch(
+                "/api/servers/" + serverId + "/eula",
+                {},
+                "Failed to load EULA status"
             );
-
-            if (!response.ok) {
-                throw new Error("Failed to load EULA status");
-            }
-
-            const eulaAccepted = await response.json();
 
             document.getElementById("eula-section").style.display =
                 eulaAccepted === false ? "block" : "none";
 
         } catch (error) {
             console.error(error);
+            showError(error.message);
         }
     }
 
     document
         .getElementById("accept-eula-button")
         .addEventListener("click", async function () {
+            clearError();
+
             try {
-                const response = await fetch(
+                await apiFetch(
                     "/api/servers/" + serverId + "/eula",
-                    { method: "POST" }
+                    { method: "POST" },
+                    "Failed to accept EULA"
                 );
-
-                if (!response.ok) {
-                    throw new Error("Failed to accept EULA");
-                }
-
-                await response.json();
 
                 document.getElementById("eula-section").style.display =
                     "none";
 
             } catch (error) {
                 console.error(error);
+                showError(error.message);
             }
         });
 
     startButton.addEventListener("click", async function () {
+        clearError();
+
         startButton.disabled = true;
         stopButton.disabled = true;
+        restartButton.disabled = true;
 
         try {
-            const response = await fetch(
+            const data = await apiFetch(
                 "/api/servers/" + serverId + "/start",
-                { method: "POST" }
+                { method: "POST" },
+                "Failed to start server"
             );
 
-            if (!response.ok) {
-                throw new Error("Failed to start server");
-            }
-
-            console.log(await response.json());
-
-            await loadServerStatus();
-            await loadServerLogs();
+            console.log(data);
 
         } catch (error) {
             console.error(error);
+            showError(error.message);
 
         } finally {
             await loadServerStatus();
@@ -219,26 +233,24 @@
     });
 
     stopButton.addEventListener("click", async function () {
+        clearError();
+
         startButton.disabled = true;
         stopButton.disabled = true;
+        restartButton.disabled = true;
 
         try {
-            const response = await fetch(
+            const data = await apiFetch(
                 "/api/servers/" + serverId + "/stop",
-                { method: "POST" }
+                { method: "POST" },
+                "Failed to stop server"
             );
 
-            if (!response.ok) {
-                throw new Error("Failed to stop server");
-            }
-
-            console.log(await response.json());
-
-            await loadServerStatus();
-            await loadServerLogs();
+            console.log(data);
 
         } catch (error) {
             console.error(error);
+            showError(error.message);
 
         } finally {
             await loadServerStatus();
@@ -246,27 +258,24 @@
     });
 
     restartButton.addEventListener("click", async function () {
+        clearError();
+
         startButton.disabled = true;
         stopButton.disabled = true;
         restartButton.disabled = true;
 
         try {
-            const response = await fetch(
+            const data = await apiFetch(
                 "/api/servers/" + serverId + "/restart",
-                { method: "POST" }
+                { method: "POST" },
+                "Failed to restart server"
             );
 
-            const data = await response.json();
             console.log(data);
-
-            if (data.ERROR) {
-                console.error(data.ERROR);
-            }
-
-            await loadServerStatus();
 
         } catch (error) {
             console.error(error);
+            showError(error.message);
 
         } finally {
             await loadServerStatus();

@@ -119,11 +119,19 @@
             <div id="server-choice" class="modal-body">
                 <p class="modal-description">What do you want to do?</p>
 
-                <button id="new-server-button" class="choice-button" type="button">
+                <button
+                    id="new-server-button"
+                    class="choice-button"
+                    type="button"
+                >
                     Create new server
                 </button>
 
-                <button id="existing-server-button" class="choice-button" type="button">
+                <button
+                    id="existing-server-button"
+                    class="choice-button"
+                    type="button"
+                >
                     Select existing server
                 </button>
             </div>
@@ -140,7 +148,9 @@
                     autocomplete="off"
                 >
 
-                <small>1–32 characters. Allowed: letters, numbers, spaces, ".", "_" and "-".</small>
+                <small>
+                    1–32 characters. Allowed: letters, numbers, spaces, ".", "_" and "-".
+                </small>
 
                 <label for="minecraft-version">Minecraft version</label>
 
@@ -151,16 +161,26 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button id="new-server-back-button" type="button">Back</button>
-                    <button id="create-server-button" type="button">Create</button>
+                    <button id="new-server-back-button" type="button">
+                        Back
+                    </button>
+
+                    <button id="create-server-button" type="button">
+                        Create
+                    </button>
                 </div>
             </div>
 
-            <div id="existing-server-form" class="modal-body" style="display: none;">
+            <div
+                id="existing-server-form"
+                class="modal-body"
+                style="display: none;"
+            >
                 <p class="modal-description">Select existing server</p>
 
                 <label for="existing-server-name">Server name</label>
-                <input
+                       function showMessage(message, type = "error") {
+ <input
                     type="text"
                     id="existing-server-name"
                     placeholder="Server name"
@@ -176,12 +196,19 @@
                         readonly
                     >
 
-                    <button id="select-folder-button" type="button">Select</button>
+                    <button id="select-folder-button" type="button">
+                        Select
+                    </button>
                 </div>
 
                 <div class="modal-footer">
-                    <button id="existing-server-back-button" type="button">Back</button>
-                    <button id="add-existing-server-button" type="button">Add</button>
+                    <button id="existing-server-back-button" type="button">
+                        Back
+                    </button>
+
+                    <button id="add-existing-server-button" type="button">
+                        Add
+                    </button>
                 </div>
             </div>
 
@@ -222,20 +249,31 @@
             messageBox.className = "server-manager-message";
         }
 
+        async function apiFetch(
+            url,
+            options = {},
+            fallbackMessage = "Request failed"
+        ) {
+            const response = await fetch(url, options);
+
+            const data = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                throw new Error(
+                    data?.detail ||
+                    data?.error ||
+                    data?.WARNING ||
+                    fallbackMessage
+                );
+            }
+
+            return data;
+        }
+
         function showChoice() {
             serverChoice.style.display = "flex";
             newServerForm.style.display = "none";
             existingServerForm.style.display = "none";
-        }
-
-        // Read an error message from the API response.
-        async function getErrorMessage(response, fallbackMessage) {
-            try {
-                const data = await response.json();
-                return data.detail || data.error || fallbackMessage;
-            } catch {
-                return fallbackMessage;
-            }
         }
 
         addServerButton.addEventListener("click", function () {
@@ -280,13 +318,11 @@
             try {
                 minecraftVersion.disabled = true;
 
-                const response = await fetch("/api/versions");
-
-                if (!response.ok) {
-                    throw new Error("Minecraft versions could not be loaded.");
-                }
-
-                const versions = await response.json();
+                const versions = await apiFetch(
+                    "/api/versions",
+                    {},
+                    "Minecraft versions could not be loaded."
+                );
 
                 minecraftVersion.replaceChildren();
 
@@ -295,19 +331,26 @@
                 placeholder.textContent = "Select version";
                 placeholder.disabled = true;
                 placeholder.selected = true;
+
                 minecraftVersion.appendChild(placeholder);
 
                 versions.forEach(function (version) {
                     const option = document.createElement("option");
                     option.value = version;
                     option.textContent = version;
+
                     minecraftVersion.appendChild(option);
                 });
 
                 minecraftVersion.dataset.loaded = "true";
+
             } catch (error) {
                 console.error(error);
-                showMessage(error.message || "Minecraft versions could not be loaded.");
+
+                showMessage(
+                    error.message || "Minecraft versions could not be loaded."
+                );
+
             } finally {
                 minecraftVersion.disabled = false;
             }
@@ -335,6 +378,7 @@
                 showMessage(
                     "Server name contains invalid characters. Allowed: letters, numbers, spaces, '.', '_' and '-'."
                 );
+
                 newServerNameInput.focus();
                 return;
             }
@@ -363,35 +407,40 @@
             modal.style.display = "none";
 
             try {
-                const response = await fetch("/api/servers", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
+                await apiFetch(
+                    "/api/servers",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            name: serverName,
+                            version: version
+                        })
                     },
-                    body: JSON.stringify({
-                        name: serverName,
-                        version: version
-                    })
-                });
-
-                if (!response.ok) {
-                    const message = await getErrorMessage(
-                        response,
-                        "Server could not be created."
-                    );
-                    throw new Error(message);
-                }
-
-                await response.json();
+                    "Server could not be created."
+                );
 
                 newServerNameInput.value = "";
                 minecraftVersion.selectedIndex = 0;
 
                 await loadServers();
+
                 showMessage("Server created successfully.", "success");
+
             } catch (error) {
                 console.error(error);
-                showMessage(error.message || "Error creating server.");
+
+                showMessage(
+                    error.message || "Error creating server."
+                );
+
+                modal.style.display = "flex";
+                showChoice();
+                newServerForm.style.display = "flex";
+                serverChoice.style.display = "none";
+
             } finally {
                 createServerButton.disabled = false;
                 loadingCard.remove();
@@ -409,34 +458,37 @@
             }
 
             clearMessage();
+
             button.disabled = true;
             button.textContent = "Deleting...";
 
             try {
-                const response = await fetch(
+                const data = await apiFetch(
                     "/api/servers/" + encodeURIComponent(serverId),
-                    { method: "DELETE" }
+                    {
+                        method: "DELETE"
+                    },
+                    "Server could not be deleted."
                 );
 
-                if (!response.ok) {
-                    const message = await getErrorMessage(
-                        response,
-                        "Server could not be deleted."
-                    );
-                    throw new Error(message);
-                }
-
-                const data = await response.json().catch(() => ({}));
-
-                if (data.error || data.WARNING) {
+                if (data?.error || data?.WARNING) {
                     throw new Error(data.error || data.WARNING);
                 }
 
                 await loadServers();
-                showMessage('Server "' + serverName + '" was deleted.', "success");
+
+                showMessage(
+                    'Server "' + serverName + '" was deleted.',
+                    "success"
+                );
+
             } catch (error) {
                 console.error(error);
-                showMessage(error.message || "Error deleting server.");
+
+                showMessage(
+                    error.message || "Error deleting server."
+                );
+
                 button.disabled = false;
                 button.textContent = "Delete";
             }
@@ -444,13 +496,12 @@
 
         async function loadServers() {
             try {
-                const response = await fetch("/api/servers");
+                const servers = await apiFetch(
+                    "/api/servers",
+                    {},
+                    "Failed to load servers."
+                );
 
-                if (!response.ok) {
-                    throw new Error("Failed to load servers.");
-                }
-
-                const servers = await response.json();
                 serverList.replaceChildren();
 
                 servers.forEach(function (server) {
@@ -459,7 +510,8 @@
 
                     const serverLink = document.createElement("a");
                     serverLink.className = "server-card-link";
-                    serverLink.href = "/server/" + encodeURIComponent(server.id);
+                    serverLink.href =
+                        "/server/" + encodeURIComponent(server.id);
 
                     const serverInfo = document.createElement("div");
                     serverInfo.className = "server-info";
@@ -476,6 +528,7 @@
 
                     serverInfo.appendChild(serverName);
                     serverInfo.appendChild(serverStatus);
+
                     serverLink.appendChild(serverInfo);
                     serverLink.appendChild(serverArrow);
 
@@ -488,37 +541,58 @@
                     deleteButton.textContent = "Delete";
 
                     deleteButton.addEventListener("click", function () {
-                        deleteServer(server.id, server.name, deleteButton);
+                        deleteServer(
+                            server.id,
+                            server.name,
+                            deleteButton
+                        );
                     });
 
                     actions.appendChild(deleteButton);
+
                     serverCard.appendChild(serverLink);
                     serverCard.appendChild(actions);
+
                     serverList.appendChild(serverCard);
 
-                    fetch("/api/servers/" + encodeURIComponent(server.id) + "/status")
-                        .then(function (response) {
-                            if (!response.ok) {
-                                throw new Error("Failed to load server status.");
-                            }
-
-                            return response.json();
-                        })
+                    apiFetch(
+                        "/api/servers/" +
+                        encodeURIComponent(server.id) +
+                        "/status",
+                        {},
+                        "Failed to load server status."
+                    )
                         .then(function (data) {
-                            const isOnline = data.status === "online";
+                            const isOnline =
+                                String(data.status).toLowerCase() === "online";
 
-                            serverStatus.textContent = isOnline ? "Online" : "Offline";
-                            serverStatus.classList.toggle("status-online", isOnline);
-                            serverStatus.classList.toggle("status-offline", !isOnline);
+                            serverStatus.textContent =
+                                isOnline ? "Online" : "Offline";
+
+                            serverStatus.classList.toggle(
+                                "status-online",
+                                isOnline
+                            );
+
+                            serverStatus.classList.toggle(
+                                "status-offline",
+                                !isOnline
+                            );
                         })
                         .catch(function (error) {
                             console.error(error);
-                            serverStatus.textContent = "Status unavailable";
+
+                            serverStatus.textContent =
+                                error.message || "Status unavailable";
                         });
                 });
+
             } catch (error) {
                 console.error(error);
-                showMessage("The server list could not be loaded.");
+
+                showMessage(
+                    error.message || "The server list could not be loaded."
+                );
             }
         }
 
@@ -540,4 +614,5 @@
     </script>
 
 </body>
+
 </html>

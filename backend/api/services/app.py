@@ -1,6 +1,7 @@
 ##### IMPORTS #####
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 import uuid
 import json
@@ -11,6 +12,10 @@ import threading
 import asyncio
 import shutil
 import re
+
+##### Pydantic models #####
+class CommandRequest(BaseModel):
+    command: str
 
 ##### SERVER RUNTIME MANAGMENT #####
 running_servers = {}
@@ -56,12 +61,7 @@ def get_servers():
 @router.post("/api/servers")
 def create_server(server: dict):
     name = server["name"].strip()
-    error = validate_server_names(name)
-    if error is not None:
-        raise HTTPException(
-            status_code = 400,
-            detail = error
-        )
+    validate_server_names(name)
     
     server["name"] = name
     server["id"] = str(uuid.uuid4())
@@ -88,7 +88,10 @@ def get_server(server_id: str):
         if server["id"] == server_id:
             return server
 
-    return {"error": "Server not found"}
+    raise HTTPException(
+        status_code=404,
+        detail="Server not found"
+    )
 
 @router.delete("/api/servers/{server_id}")
 def delete_server(server_id):
@@ -114,16 +117,22 @@ def delete_server(server_id):
 
             return {"message": "Server deleted"}
         else:
-            return {"error": "Server not found"}
+            raise HTTPException(
+                status_code=404,
+                detail="Server not found"
+            )
     else:
-        return {"WARNING": "Server is running. Please stop the server before deleting."}
-
+        raise HTTPException(
+            status_code=409,
+            detail="Server is running"
+        )
 
 @router.post("/api/servers/{server_id}/start")
 def start_server(server_id):
     process = subprocess.Popen(
             ["java", "-jar", "server.jar"],
             cwd=("data/servers/" + server_id),
+            stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True
@@ -143,13 +152,20 @@ def stop_server(server_id):
     try:
         process = running_servers[server_id]
     except KeyError:
-        return {"ERROR": "Server can not be stopped"}
+        raise HTTPException(
+            status_code=404,
+            detail="Server not found"
+        )
     
-    process.terminate()
+    process.stdin.write("stop\n")
+    process.stdin.flush()
     try:
         process.wait(timeout=60)
     except subprocess.TimeoutExpired:
-        return {"ERROR": "Stop timeout"} 
+        raise HTTPException(
+            status_code=408,
+            detail="Stop Timeout"
+        ) 
     del running_servers[server_id]
 
     return {"message": "Server stopped"}
@@ -159,7 +175,10 @@ def restart_server(server_id):
     try:
         process = running_servers[server_id]
     except KeyError:
-        return {"ERROR": "Server can not be restarted"}
+        raise HTTPException(
+            status_code=404,
+            detail="Server not found"
+        )
     
     if process.poll() is None:
         stop_result = stop_server(server_id)
@@ -168,7 +187,10 @@ def restart_server(server_id):
         else:
             return stop_result
     else:
-        return {"message": "Server is not running"}
+        raise HTTPException(
+            status_code=409,
+            detail="Server is not running"
+        )
 
     return {"message": "Server restarted"}
 
@@ -205,6 +227,26 @@ async def stream_logs(server_id: str):
         media_type="text/event-stream"
     )
 
+@router.post("/api/servers/{server_id}/command")
+def do_command(server_id: str, request: CommandRequest):
+    command = request.command.strip()
+
+    if server_id in running_servers:
+        if command != "":
+            process = running_servers[server_id]
+            process.stdin.write(command + "\n")
+            process.stdin.flush()
+        else:
+            raise HTTPException(
+                status_code=400, 
+                detail="Empty command!"
+            )
+    else:
+        raise HTTPException(
+            status_code=404, 
+            detail="Server is not running."
+        )
+
 
 #==============================#
 #        EULA ENDPOINTS        #
@@ -219,7 +261,10 @@ def get_eula_status(server_id: str):
         elif "eula=true" in content:
             return True
         else:
-            return {"error": "eula.txt is broken"}
+            raise HTTPException(
+                status_code=500,
+                detail="eula.txt is broken"
+            )
 
 @router.post("/api/servers/{server_id}/eula")
 def set_eula(server_id: str):
@@ -397,10 +442,17 @@ def read_logs(server_id, process):
 
 def validate_server_names(name):
     if name == "":
-        return "Server name cannot be empty."
+        raise HTTPException(
+            status_code=400,
+            detail="Server name cannot be empty" 
+        )
     elif len(name) > 32:
-        return "Server name must not exceed 32 characters."
+        raise HTTPException(
+            status_code=400,
+            detail="Server name must not exceed 32 characters" 
+        )
     elif re.fullmatch(r"[a-zA-Z0-9 _.-]+", name) is None:
-        return "Server name contains invalid characters. Allowed: letters, numbers, spaces, '.', '_' and '-'."
-    else:
-        return None
+        raise HTTPException(
+            status_code=400,
+            detail="Server name contains invalid characters. Allowed: letters, numbers, spaces, '.', '_' and '-'" 
+        )
