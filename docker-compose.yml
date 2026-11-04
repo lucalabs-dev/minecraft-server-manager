@@ -3,8 +3,10 @@ services:
     build: ./backend/api
     ports:
       - "3000:3000"
+      - "25565:25565"
     volumes:
       - ./data:/app/data
+      
   web:
     image: nginx
     depends_on:

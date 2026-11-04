@@ -56,6 +56,21 @@
              style="background: #111; color: #eee; padding: 15px;
                     height: 350px; overflow-y: auto; white-space: pre-wrap;
                     overflow-wrap: anywhere; font-family: monospace;">Warte auf Serverausgabe...</pre>
+
+        <div class="console-input">
+            <input
+                type="text"
+                id="command-input"
+                placeholder="Minecraft-Befehl eingeben..."
+                autocomplete="off"
+            >
+
+            <button id="send-command-button" type="button">
+                Senden
+            </button>
+        </div>
+
+        <p id="command-error" role="alert"></p>
     </section>
 
 </main>
@@ -69,10 +84,14 @@
     const consoleOutput = document.getElementById("console-output");
     const errorMessage = document.getElementById("error-message");
 
+    const commandInput = document.getElementById("command-input");
+    const sendCommandButton = document.getElementById("send-command-button");
+    const commandError = document.getElementById("command-error");
+
     const logStream = new EventSource(
         "/api/servers/" + serverId + "/logs"
     );
-    
+
     async function apiFetch(url, options = {}, fallback = "Request failed") {
         const response = await fetch(url, options);
 
@@ -162,6 +181,9 @@
             startButton.disabled = isOnline;
             stopButton.disabled = !isOnline;
             restartButton.disabled = !isOnline;
+
+            commandInput.disabled = !isOnline;
+            sendCommandButton.disabled = !isOnline;
 
         } catch (error) {
             console.error(error);
@@ -279,6 +301,52 @@
 
         } finally {
             await loadServerStatus();
+        }
+    });
+
+    async function sendCommand() {
+        const command = commandInput.value.trim();
+
+        commandError.textContent = "";
+
+        if (!command) {
+            return;
+        }
+
+        sendCommandButton.disabled = true;
+
+        try {
+            await apiFetch(
+                "/api/servers/" + serverId + "/command",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        command: command
+                    })
+                },
+                "Failed to send command"
+            );
+
+            commandInput.value = "";
+
+        } catch (error) {
+            console.error(error);
+            commandError.textContent = error.message;
+
+        } finally {
+            await loadServerStatus();
+            commandInput.focus();
+        }
+    }
+
+    sendCommandButton.addEventListener("click", sendCommand);
+
+    commandInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            sendCommand();
         }
     });
 

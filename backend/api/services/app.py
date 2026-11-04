@@ -231,21 +231,45 @@ async def stream_logs(server_id: str):
 def do_command(server_id: str, request: CommandRequest):
     command = request.command.strip()
 
-    if server_id in running_servers:
-        if command != "":
-            process = running_servers[server_id]
-            process.stdin.write(command + "\n")
-            process.stdin.flush()
-        else:
-            raise HTTPException(
-                status_code=400, 
-                detail="Empty command!"
-            )
-    else:
+    if command == "":
+        raise HTTPException(
+            status_code=400, 
+            detail="Empty command!"
+        )
+
+    if server_id not in running_servers:
         raise HTTPException(
             status_code=404, 
-            detail="Server is not running."
+            detail="Server is not running"
         )
+
+    process = running_servers[server_id]
+
+    if process.poll() is not None:
+        del running_servers[server_id]
+
+        raise HTTPException(
+            status_code=404,
+            detail="Server is not running"
+        )
+
+    if process.stdin is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Server input is not available"
+        )
+
+
+    try:
+        process.stdin.write(command + "\n")
+        process.stdin.flush()
+    except (BrokenPipeError, OSError):
+        raise HTTPException(
+            status_code=500,
+            detail="Could not send command to server"
+        )
+
+    return {"message": "Command "}
 
 
 #==============================#
