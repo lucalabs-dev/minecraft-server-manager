@@ -333,12 +333,31 @@ def download_server_jar(version, server_path):
 
     data = response.json()
 
-    stable_build = max(
-        (build for build in data if build["channel"] == "STABLE"),
-        key=lambda build: build["id"]
-    )
+    channel_priority = [
+        "STABLE",
+        "BETA",
+        "ALPHA"
+    ]
 
-    url = stable_build["downloads"]["server:default"]["url"]
+    build = None
+    for channel in channel_priority:
+        try:
+            build = max(
+                (build for build in data if build["channel"] == channel),
+                key=lambda build: build["id"]
+            )
+            if build is not None:
+                break
+        except ValueError:
+            continue
+
+    if build is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No channel for this Version available"
+        )
+
+    url = build["downloads"]["server:default"]["url"]
 
     response = requests.get(url)
     response.raise_for_status()
