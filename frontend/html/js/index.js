@@ -1,4 +1,3 @@
-
 const modal = document.getElementById("add-server-modal");
 const addServerButton = document.getElementById("add-server-button");
 const closeModalButton = document.getElementById("close-modal-button");
@@ -324,12 +323,33 @@ async function loadServers() {
             const actions = document.createElement("div");
             actions.className = "server-card-actions";
 
+            const menuButton = document.createElement("button");
+            menuButton.type = "button";
+            menuButton.className = "server-menu-button";
+            menuButton.textContent = "⋮";
+            menuButton.setAttribute("aria-label", "Server options");
+
+            const dropdown = document.createElement("div");
+            dropdown.className = "server-dropdown";
+            dropdown.style.display = "none";
+
+            const propertiesButton = document.createElement("button");
+            propertiesButton.type = "button";
+            propertiesButton.textContent = "Change Server Properties";
+
+            propertiesButton.addEventListener("click", function () {
+                window.location.href =
+                    "/server/" + encodeURIComponent(server.id) + "/properties";
+            });
+
             const deleteButton = document.createElement("button");
             deleteButton.type = "button";
             deleteButton.className = "delete-server-button";
             deleteButton.textContent = "Delete";
 
             deleteButton.addEventListener("click", function () {
+                dropdown.style.display = "none";
+
                 deleteServer(
                     server.id,
                     server.name,
@@ -337,7 +357,31 @@ async function loadServers() {
                 );
             });
 
-            actions.appendChild(deleteButton);
+            menuButton.addEventListener("click", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                document.querySelectorAll(".server-dropdown").forEach(function (menu) {
+                    if (menu !== dropdown) {
+                        menu.style.display = "none";
+                    }
+                });
+
+                dropdown.style.display =
+                    dropdown.style.display === "none" ? "flex" : "none";
+            });
+
+            document.addEventListener("click", function (event) {
+                if (!actions.contains(event.target)) {
+                    dropdown.style.display = "none";
+                }
+            });
+
+            dropdown.appendChild(propertiesButton);
+            dropdown.appendChild(deleteButton);
+
+            actions.appendChild(menuButton);
+            actions.appendChild(dropdown);
 
             serverCard.appendChild(serverLink);
             serverCard.appendChild(actions);
