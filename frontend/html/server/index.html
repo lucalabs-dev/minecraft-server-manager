@@ -19,6 +19,7 @@
 
     <section id="server">
         <h2 id="server-name">Server</h2>
+        <p id="server-version">Minecraft-Version: Unknown</p>
 
         <p>
             Status:
@@ -155,6 +156,9 @@
             document.getElementById("server-name").textContent =
                 server.name;
 
+            document.getElementById("server-version").textContent =
+                "Minecraft-Version: " + (server.version || "Unknown");
+                
         } catch (error) {
             console.error(error);
 

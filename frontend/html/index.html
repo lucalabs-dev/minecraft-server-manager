@@ -71,6 +71,12 @@
             box-sizing: border-box;
             max-width: 100%;
         }
+
+        .server-version {
+            font-size: 0.9em;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
     </style>
 </head>
 
@@ -179,8 +185,7 @@
                 <p class="modal-description">Select existing server</p>
 
                 <label for="existing-server-name">Server name</label>
-                       function showMessage(message, type = "error") {
- <input
+                <input
                     type="text"
                     id="existing-server-name"
                     placeholder="Server name"
@@ -519,6 +524,11 @@
                     const serverName = document.createElement("h3");
                     serverName.textContent = server.name;
 
+                    const serverVersion = document.createElement("p");
+                    serverVersion.className = "server-version";
+                    serverVersion.textContent =
+                        "Minecraft " + (server.version || "Unknown");
+
                     const serverStatus = document.createElement("p");
                     serverStatus.textContent = "Loading status...";
 
@@ -527,6 +537,7 @@
                     serverArrow.textContent = "→";
 
                     serverInfo.appendChild(serverName);
+                    serverInfo.appendChild(serverVersion);
                     serverInfo.appendChild(serverStatus);
 
                     serverLink.appendChild(serverInfo);
