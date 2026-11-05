@@ -69,13 +69,24 @@ def create_server(server: dict):
     with open("data/servers.json", "r") as servers:
         data = json.load(servers)
 
-    download_server_jar(server["version"], server["id"])
+    server_path = "data/servers/" + server["id"]
+    try:
+        download_server_jar(server["version"], server_path)
 
-    data["servers"].append(server)
+        data["servers"].append(server)
 
-    with open("data/servers.json", "w") as servers:
-        json.dump(data, servers, indent=2)
+        with open("data/servers.json", "w") as servers:
+            json.dump(data, servers, indent=2)
 
+    except Exception as e:
+        shutil.rmtree(server_path, ignore_errors=True)
+        print(f"Server creation failed: {e}")                   
+        
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while creating the server"
+        )
+    
     return server
 
 @router.get("/api/servers/{server_id}")
@@ -309,8 +320,7 @@ def set_eula(server_id: str):
 #==============================#
 #      INTERNAL FUNCTIONS      #
 #==============================#
-def download_server_jar(version, server_id):
-    server_path = "data/servers/" + server_id
+def download_server_jar(version, server_path):
     os.makedirs(server_path)
 
     response = requests.get(
