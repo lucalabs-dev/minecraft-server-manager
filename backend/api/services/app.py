@@ -17,6 +17,9 @@ import re
 class CommandRequest(BaseModel):
     command: str
 
+class PropertiesRequest(BaseModel):
+    property: dict[str, str] 
+
 ##### SERVER RUNTIME MANAGMENT #####
 running_servers = {}
 server_logs = {}
@@ -282,6 +285,66 @@ def do_command(server_id: str, request: CommandRequest):
 
     return {"message": "Command "}
 
+@router.get("/api/servers/{server_id}/properties")
+def get_properties(server_id):
+    try:
+        properties = parse_properties(server_id)
+
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Not Found"
+        )
+    
+    return properties
+
+@router.patch("/api/servers/{server_id}/properties")
+def patch_properties(server_id, request: PropertiesRequest):
+    new_properties = request.property
+    old_properties = parse_properties(server_id)
+
+    for property, value in new_properties.items():
+        if property not in old_properties:
+            raise HTTPException(
+                status_code=400,
+                detail="Property not found"
+            )
+
+    write_properties(server_id, new_properties)
+
+    return {"message": "Properties updated successfully"}
+
+def write_properties(server_id, new_properties):
+    server_path = "data/servers/" + server_id + "/server.properties"
+
+    with open(server_path, "r") as file:
+        file_content = file.read() 
+
+    lines = []
+    line_index = 0
+
+    for line in file_content.splitlines():
+        lines.append(line)
+
+        if "=" in line:
+            property_name, old_value = line.split("=", 1)
+
+            for updated_property, new_value in new_properties.items():
+                if updated_property == property_name:
+                    if new_value != old_value:
+                        lines[line_index] = (property_name + "=" + new_value)
+                        break
+
+        line_index += 1
+
+    updated_content = "\n".join(lines)
+
+    with open(server_path, "w") as file:
+        file.write(updated_content)
+
+    
+
+
 
 #==============================#
 #        EULA ENDPOINTS        #
@@ -484,6 +547,22 @@ def apply_default_settings(server_id):
     
     return {"message": "Default server properties were applied"}
 
+def parse_properties(server_id):
+    server_path = "data/servers/" + server_id + "/server.properties"
+
+    with open(server_path, "r") as file:
+        content = file.read()
+
+        properties = {}
+
+        for line in content.splitlines():
+            if "=" in line:
+                setting, value = line.split("=", 1)
+
+                properties[setting] = value
+
+        return properties
+    
 def read_logs(server_id, process):
     for line in process.stdout:
         server_logs[server_id].append(line)
