@@ -15,66 +15,66 @@
     <p>Manage your Minecraft servers</p>
 </header>
 
-<main>
+    <main>
 
-    <section id="server">
-        <h2 id="server-name">Server</h2>
-        <p id="server-version">Minecraft-Version: Unknown</p>
+        <section id="server">
+            <h2 id="server-name">Server</h2>
+            <p id="server-version">Minecraft-Version: Unknown</p>
 
-        <p>
-            Status:
-            <span id="server-status">Offline</span>
-        </p>
-
-        <p>
-            Spieler:
-            <span id="player-count">0 / 20</span>
-        </p>
-
-        <div>
-            <button id="start-button" class="start-button">Start</button>
-            <button id="stop-button" class="stop-button">Stop</button>
-            <button id="restart-button" class="restart-button">Restart</button>
-        </div>
-
-        <div id="eula-section" style="display: none;">
             <p>
-                You must accept the Minecraft EULA before starting the server.
+                Status:
+                <span id="server-status">Offline</span>
             </p>
 
-            <button id="accept-eula-button">
-                Accept EULA
-            </button>
-        </div>
+            <p>
+                Spieler:
+                <span id="player-count">0 / 20</span>
+            </p>
 
-        <p id="error-message" role="alert" style="display: none;"></p>
-    </section>
+            <div>
+                <button id="start-button" class="start-button">Start</button>
+                <button id="stop-button" class="stop-button">Stop</button>
+                <button id="restart-button" class="restart-button">Restart</button>
+            </div>
 
-    <section id="console">
-        <h2>Serverconsole</h2>
+            <div id="eula-section" style="display: none;">
+                <p>
+                    You must accept the Minecraft EULA before starting the server.
+                </p>
 
-        <pre id="console-output"
-             style="background: #111; color: #eee; padding: 15px;
-                    height: 350px; overflow-y: auto; white-space: pre-wrap;
-                    overflow-wrap: anywhere; font-family: monospace;">Warte auf Serverausgabe...</pre>
+                <button id="accept-eula-button">
+                    Accept EULA
+                </button>
+            </div>
 
-        <div class="console-input">
-            <input
-                type="text"
-                id="command-input"
-                placeholder="Minecraft-Befehl eingeben..."
-                autocomplete="off"
-            >
+            <p id="error-message" role="alert" style="display: none;"></p>
+        </section>
 
-            <button id="send-command-button" type="button">
-                Senden
-            </button>
-        </div>
+        <section id="console">
+            <h2>Serverconsole</h2>
 
-        <p id="command-error" role="alert"></p>
-    </section>
+            <pre id="console-output"
+                style="background: #111; color: #eee; padding: 15px;
+                        height: 350px; overflow-y: auto; white-space: pre-wrap;
+                        overflow-wrap: anywhere; font-family: monospace;">Warte auf Serverausgabe...</pre>
 
-</main>
+            <div class="console-input">
+                <input
+                    type="text"
+                    id="command-input"
+                    placeholder="Minecraft-Befehl eingeben..."
+                    autocomplete="off"
+                >
+
+                <button id="send-command-button" type="button">
+                    Senden
+                </button>
+            </div>
+
+            <p id="command-error" role="alert"></p>
+        </section>
+
+    </main>
 
 <script src="/js/server.js" defer></script>
 

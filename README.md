@@ -22,6 +22,14 @@ This web application is a Docker-based system for creating and managing Minecraf
 - Store server information in a JSON file
 - Run Minecraft servers inside a Docker container
 - Run Minecraft servers as a non-root user
+- Configure server.properties through the web interface
+- Retrieve server properties through the API
+- Update server properties through the API
+- Support for basic and advanced server configuration options
+- Automatically detect available server configuration options in the frontend
+- Support for multiple PaperMC build channels (STABLE, BETA, ALPHA)
+- Automatically fall back to alternative build channels when necessary
+- Support for older PaperMC Minecraft versions
 
 
 
@@ -52,22 +60,3 @@ This web application is a Docker-based system for creating and managing Minecraf
 3. Once the containers are running, open the following URL in your browser:
 
    http://localhost:8080
-
-
-
-## Project Structure
-
-Minecraft-Server-Manager/
-├── backend/
-│   └── api/            # FastAPI backend
-│       └── Dockerfile  # Backend container configuration 
-├── data/
-│   ├── servers/        # Minecraft server files
-│   └── servers.json    # Registered server information
-├── docker/             # Docker-related files
-├── frontend/
-│   └── html/           # HTML, CSS and JavaScript
-├── nginx/
-│   └── nginx.conf      # Nginx configuration
-├── docker-compose.yml
-└── README.md

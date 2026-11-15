@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Properties</title>
+
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+
+    <main class="properties-container">
+
+        <header class="properties-header">
+            <h1>Server Properties</h1>
+            <a href="../index.html">← Back to Server</a>
+        </header>
+
+        <section class="properties-form">
+            
+
+            <h2>Basic Settings</h2>
+
+            <div class="property-group">
+                <label for="motd">Server MOTD</label>
+                <input type="text" id="motd" name="motd">
+            </div>
+
+            <div class="property-group">
+                <label for="max-players">Max Players</label>
+                <input type="number" id="max-players" name="max-players">
+            </div>
+
+            <div class="property-group">
+                <label for="difficulty">Difficulty</label>
+                <select id="difficulty" name="difficulty">
+                    <option value="peaceful">Peaceful</option>
+                    <option value="easy">Easy</option>
+                    <option value="normal">Normal</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+
+            <div class="property-group">
+                <label for="gamemode">Gamemode</label>
+                <select id="gamemode" name="gamemode">
+                    <option value="survival">Survival</option>
+                    <option value="creative">Creative</option>
+                    <option value="adventure">Adventure</option>
+                    <option value="spectator">Spectator</option>
+                </select>
+            </div>
+
+            <div class="property-group">
+                <label for="pvp">PvP</label>
+                <select id="pvp" name="pvp">
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                </select>
+            </div>
+
+            <div class="property-group">
+                <label for="online-mode">Online Mode</label>
+                <select id="online-mode" name="online-mode">
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                </select>
+            </div>
+
+            <div class="property-group">
+                <label for="white-list">Whitelist</label>
+                <select id="white-list" name="white-list">
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                </select>
+            </div>
+
+            <div class="property-group">
+                <label for="enforce-whitelist">Enforce Whitelist</label>
+                <select id="enforce-whitelist" name="enforce-whitelist">
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                </select>
+            </div>
+
+            <div class="property-group">
+                <label for="view-distance">View Distance</label>
+                <input type="number" id="view-distance" name="view-distance">
+            </div>
+
+            <div class="property-group">
+                <label for="simulation-distance">Simulation Distance</label>
+                <input type="number" id="simulation-distance" name="simulation-distance">
+            </div>
+
+            <div class="property-group">
+                <label for="spawn-protection">Spawn Protection</label>
+                <input type="number" id="spawn-protection" name="spawn-protection">
+            </div>
+
+            <div class="property-group">
+                <label for="allow-nether">Allow Nether</label>
+                <select id="allow-nether" name="allow-nether">
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                </select>
+            </div>
+
+            <div class="property-group">
+                <label for="hardcore">Hardcore</label>
+                <select id="hardcore" name="hardcore">
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                </select>
+            </div>
+
+
+            <details class="advanced-settings">
+
+                <summary>Advanced Settings</summary>
+
+
+                <h2>Gameplay & Behavior</h2>
+
+                <div class="property-group">
+                    <label for="force-gamemode">Force Gamemode</label>
+                    <select id="force-gamemode" name="force-gamemode">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="allow-flight">Allow Flight</label>
+                    <select id="allow-flight" name="allow-flight">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="enable-command-block">Enable Command Blocks</label>
+                    <select id="enable-command-block" name="enable-command-block">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="spawn-monsters">Spawn Monsters</label>
+                    <select id="spawn-monsters" name="spawn-monsters">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="spawn-animals">Spawn Animals</label>
+                    <select id="spawn-animals" name="spawn-animals">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="spawn-npcs">Spawn NPCs</label>
+                    <select id="spawn-npcs" name="spawn-npcs">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="player-idle-timeout">Player Idle Timeout (minutes)</label>
+                    <input type="number" id="player-idle-timeout" name="player-idle-timeout">
+                </div>
+
+                <div class="property-group">
+                    <label for="pause-when-empty-seconds">Pause When Empty (seconds)</label>
+                    <input type="number" id="pause-when-empty-seconds" name="pause-when-empty-seconds">
+                </div>
+
+                <div class="property-group">
+                    <label for="hide-online-players">Hide Online Players</label>
+                    <select id="hide-online-players" name="hide-online-players">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="prevent-proxy-connections">Prevent Proxy Connections</label>
+                    <select id="prevent-proxy-connections" name="prevent-proxy-connections">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="accepts-transfers">Accept Transfers</label>
+                    <select id="accepts-transfers" name="accepts-transfers">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="enforce-secure-profile">Enforce Secure Profile</label>
+                    <select id="enforce-secure-profile" name="enforce-secure-profile">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="require-resource-pack">Require Resource Pack</label>
+                    <select id="require-resource-pack" name="require-resource-pack">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+
+                <h2>World Generation</h2>
+
+                <div class="property-group">
+                    <label for="level-name">World Name</label>
+                    <input type="text" id="level-name" name="level-name">
+                </div>
+
+                <div class="property-group">
+                    <label for="level-seed">World Seed</label>
+                    <input type="text" id="level-seed" name="level-seed">
+                </div>
+
+                <div class="property-group">
+                    <label for="level-type">World Type</label>
+                    <input type="text" id="level-type" name="level-type">
+                </div>
+
+                <div class="property-group">
+                    <label for="generate-structures">Generate Structures</label>
+                    <select id="generate-structures" name="generate-structures">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="generator-settings">Generator Settings</label>
+                    <input type="text" id="generator-settings" name="generator-settings">
+                </div>
+
+                <div class="property-group">
+                    <label for="max-world-size">Max World Size</label>
+                    <input type="number" id="max-world-size" name="max-world-size">
+                </div>
+
+                <div class="property-group">
+                    <label for="initial-enabled-packs">Initial Enabled Packs</label>
+                    <input type="text" id="initial-enabled-packs" name="initial-enabled-packs">
+                </div>
+
+                <div class="property-group">
+                    <label for="initial-disabled-packs">Initial Disabled Packs</label>
+                    <input type="text" id="initial-disabled-packs" name="initial-disabled-packs">
+                </div>
+
+
+                <h2>Performance & Networking</h2>
+
+                <div class="property-group">
+                    <label for="entity-broadcast-range-percentage">Entity Broadcast Range (%)</label>
+                    <input type="number" id="entity-broadcast-range-percentage" name="entity-broadcast-range-percentage">
+                </div>
+
+                <div class="property-group">
+                    <label for="network-compression-threshold">Network Compression Threshold</label>
+                    <input type="number" id="network-compression-threshold" name="network-compression-threshold">
+                </div>
+
+                <div class="property-group">
+                    <label for="rate-limit">Rate Limit</label>
+                    <input type="number" id="rate-limit" name="rate-limit">
+                </div>
+
+                <div class="property-group">
+                    <label for="max-chained-neighbor-updates">Max Chained Neighbor Updates</label>
+                    <input type="number" id="max-chained-neighbor-updates" name="max-chained-neighbor-updates">
+                </div>
+
+                <div class="property-group">
+                    <label for="max-tick-time">Max Tick Time (ms)</label>
+                    <input type="number" id="max-tick-time" name="max-tick-time">
+                </div>
+
+                <div class="property-group">
+                    <label for="sync-chunk-writes">Sync Chunk Writes</label>
+                    <select id="sync-chunk-writes" name="sync-chunk-writes">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="use-native-transport">Use Native Transport</label>
+                    <select id="use-native-transport" name="use-native-transport">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="region-file-compression">Region File Compression</label>
+                    <input type="text" id="region-file-compression" name="region-file-compression">
+                </div>
+
+                <div class="property-group">
+                    <label for="status-heartbeat-interval">Status Heartbeat Interval</label>
+                    <input type="number" id="status-heartbeat-interval" name="status-heartbeat-interval">
+                </div>
+
+                <div class="property-group">
+                    <label for="chat-spam-threshold-seconds">Chat Spam Threshold (seconds)</label>
+                    <input type="number" id="chat-spam-threshold-seconds" name="chat-spam-threshold-seconds">
+                </div>
+
+                <div class="property-group">
+                    <label for="command-spam-threshold-seconds">Command Spam Threshold (seconds)</label>
+                    <input type="number" id="command-spam-threshold-seconds" name="command-spam-threshold-seconds">
+                </div>
+
+
+                <h2>Administration & Miscellaneous</h2>
+
+                <div class="property-group">
+                    <label for="op-permission-level">OP Permission Level</label>
+                    <input type="number" id="op-permission-level" name="op-permission-level">
+                </div>
+
+                <div class="property-group">
+                    <label for="function-permission-level">Function Permission Level</label>
+                    <input type="number" id="function-permission-level" name="function-permission-level">
+                </div>
+
+                <div class="property-group">
+                    <label for="broadcast-console-to-ops">Broadcast Console to OPs</label>
+                    <select id="broadcast-console-to-ops" name="broadcast-console-to-ops">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="broadcast-rcon-to-ops">Broadcast RCON to OPs</label>
+                    <select id="broadcast-rcon-to-ops" name="broadcast-rcon-to-ops">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="debug">Debug Mode</label>
+                    <select id="debug" name="debug">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="bug-report-link">Bug Report Link</label>
+                    <input type="text" id="bug-report-link" name="bug-report-link">
+                </div>
+
+                <div class="property-group">
+                    <label for="enable-code-of-conduct">Enable Code of Conduct</label>
+                    <select id="enable-code-of-conduct" name="enable-code-of-conduct">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="text-filtering-config">Text Filtering Config</label>
+                    <input type="text" id="text-filtering-config" name="text-filtering-config">
+                </div>
+
+                <div class="property-group">
+                    <label for="text-filtering-version">Text Filtering Version</label>
+                    <input type="number" id="text-filtering-version" name="text-filtering-version">
+                </div>
+
+                <div class="property-group">
+                    <label for="enable-jmx-monitoring">Enable JMX Monitoring</label>
+                    <select id="enable-jmx-monitoring" name="enable-jmx-monitoring">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="enable-query">Enable Query</label>
+                    <select id="enable-query" name="enable-query">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="enable-status">Enable Status</label>
+                    <select id="enable-status" name="enable-status">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="enable-rcon">Enable RCON</label>
+                    <select id="enable-rcon" name="enable-rcon">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+
+                <div class="property-group">
+                    <label for="resource-pack">Resource Pack URL</label>
+                    <input type="text" id="resource-pack" name="resource-pack">
+                </div>
+
+                <div class="property-group">
+                    <label for="resource-pack-id">Resource Pack ID</label>
+                    <input type="text" id="resource-pack-id" name="resource-pack-id">
+                </div>
+
+                <div class="property-group">
+                    <label for="resource-pack-prompt">Resource Pack Prompt</label>
+                    <input type="text" id="resource-pack-prompt" name="resource-pack-prompt">
+                </div>
+
+                <div class="property-group">
+                    <label for="resource-pack-sha1">Resource Pack SHA1</label>
+                    <input type="text" id="resource-pack-sha1" name="resource-pack-sha1">
+                </div>
+
+            </details>
+
+
+            <button type="button" id="save-properties">
+                Save Properties
+            </button>
+
+            <p id="save-message"></p>
+
+        </section>
+
+    </main>
+
+    <script src="../../js/properties.js" defer></script>
+
+</body>
+</html>

@@ -336,6 +336,9 @@ async function loadServers() {
             const propertiesButton = document.createElement("button");
             propertiesButton.type = "button";
             propertiesButton.textContent = "Change Server Properties";
+            propertiesButton.addEventListener("click", function () {
+                window.location.href = `/server/properties/?id=${server.id}`;
+            });
 
             propertiesButton.addEventListener("click", function () {
                 window.location.href =

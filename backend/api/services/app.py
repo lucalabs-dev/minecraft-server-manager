@@ -13,6 +13,8 @@ import asyncio
 import shutil
 import re
 
+from services.config.default_properties import default_properties
+
 ##### Pydantic models #####
 class CommandRequest(BaseModel):
     command: str
@@ -305,6 +307,7 @@ def patch_properties(server_id, request: PropertiesRequest):
 
     for property, value in new_properties.items():
         if property not in old_properties:
+            print(f"Unknown property: {property}")
             raise HTTPException(
                 status_code=400,
                 detail="Property not found"
@@ -314,37 +317,11 @@ def patch_properties(server_id, request: PropertiesRequest):
 
     return {"message": "Properties updated successfully"}
 
-def write_properties(server_id, new_properties):
-    server_path = "data/servers/" + server_id + "/server.properties"
-
-    with open(server_path, "r") as file:
-        file_content = file.read() 
-
-    lines = []
-    line_index = 0
-
-    for line in file_content.splitlines():
-        lines.append(line)
-
-        if "=" in line:
-            property_name, old_value = line.split("=", 1)
-
-            for updated_property, new_value in new_properties.items():
-                if updated_property == property_name:
-                    if new_value != old_value:
-                        lines[line_index] = (property_name + "=" + new_value)
-                        break
-
-        line_index += 1
-
-    updated_content = "\n".join(lines)
-
-    with open(server_path, "w") as file:
-        file.write(updated_content)
-
+@router.post("/api/servers/{server_id}/properties/reset")
+def reset_server_properties(server_id):
+    new_properties = default_properties
+    write_properties(server_id, new_properties)
     
-
-
 
 #==============================#
 #        EULA ENDPOINTS        #
@@ -375,7 +352,7 @@ def set_eula(server_id: str):
     with open("data/servers/" + server_id + "/eula.txt", "w") as file:
         file.write(content)
 
-    apply_default_settings(server_id)
+    apply_default_properties(server_id)
 
     return {"message": "EULA was accepted"}
 
@@ -437,87 +414,7 @@ def initialize_server(server_path):
     )
     process.wait()
 
-def apply_default_settings(server_id):
-    default_settings = {
-        "accepts-transfers": "false",
-        "allow-flight": "false",
-        "broadcast-console-to-ops": "true",
-        "broadcast-rcon-to-ops": "true",
-        "bug-report-link": "",
-        "chat-spam-threshold-seconds": "10",
-        "command-spam-threshold-seconds": "10",
-        "debug": "false",
-        "difficulty": "normal",
-        "enable-code-of-conduct": "false",
-        "enable-jmx-monitoring": "false",
-        "enable-query": "false",
-        "enable-rcon": "false",
-        "enable-status": "true",
-        "enforce-secure-profile": "true",
-        "enforce-whitelist": "false",
-        "entity-broadcast-range-percentage": "100",
-        "force-gamemode": "false",
-        "function-permission-level": "2",
-        "gamemode": "survival",
-        "generate-structures": "true",
-        "generator-settings": "{}",
-        "hardcore": "false",
-        "hide-online-players": "false",
-        "initial-disabled-packs": "",
-        "initial-enabled-packs": "vanilla",
-        "level-name": "world",
-        "level-seed": "",
-        "level-type": "minecraft\\:normal",
-        "log-ips": "true",
-        "management-server-allowed-origins": "",
-        "management-server-enabled": "false",
-        "management-server-host": "localhost",
-        "management-server-port": "0",
-        "management-server-tls-enabled": "true",
-        "management-server-tls-keystore": "",
-        "management-server-tls-keystore-password": "",
-        "max-chained-neighbor-updates": "1000000",
-        "max-players": "20",
-        "max-tick-time": "60000",
-        "max-world-size": "29999984",
-        "motd": "A Minecraft Server",
-        "network-compression-threshold": "256",
-        "online-mode": "true",
-        "op-permission-level": "4",
-        "pause-when-empty-seconds": "-1",
-        "player-idle-timeout": "0",
-        "prevent-proxy-connections": "false",
-        "query.port": "25565",
-        "rate-limit": "0",
-        "rcon.password": "",
-        "rcon.port": "25575",
-        "region-file-compression": "deflate",
-        "require-resource-pack": "false",
-        "resource-pack": "",
-        "resource-pack-id": "",
-        "resource-pack-prompt": "",
-        "resource-pack-sha1": "",
-        "server-ip": "",
-        "server-port": "25565",
-        "simulation-distance": "8",
-        "spawn-protection": "16",
-        "status-heartbeat-interval": "0",
-        "sync-chunk-writes": "true",
-        "text-filtering-config": "",
-        "text-filtering-version": "0",
-        "use-native-transport": "true",
-        "view-distance": "20",
-        "white-list": "false",
-
-        # Additional settings:
-        "pvp": "true",
-        "spawn-monsters": "true",
-        "spawn-animals": "true",
-        "spawn-npcs": "true",
-        "allow-nether": "true",
-        "enable-command-block": "true"
-    }
-
+def apply_default_properties(server_id):
     with open("data/servers/" + server_id + "/server.properties", "r") as file:
         content = file.read()
 
@@ -530,14 +427,14 @@ def apply_default_settings(server_id):
 
             found_settings.append(setting)
             
-            if setting in default_settings:
-                new_value = default_settings[setting]
+            if setting in default_properties:
+                new_value = default_properties[setting]
                 line = setting + "=" + new_value
         lines.append(line)
 
-    for setting in default_settings:
+    for setting in default_properties:
         if setting not in found_settings:
-            lines.append(setting + "=" + default_settings[setting])
+            lines.append(setting + "=" + default_properties[setting])
         
     content = "\n".join(lines)
 
@@ -562,6 +459,34 @@ def parse_properties(server_id):
                 properties[setting] = value
 
         return properties
+
+def write_properties(server_id, new_properties):
+    server_path = "data/servers/" + server_id + "/server.properties"
+
+    with open(server_path, "r") as file:
+        file_content = file.read() 
+
+    lines = []
+    line_index = 0
+
+    for line in file_content.splitlines():
+        lines.append(line)
+
+        if "=" in line:
+            property_name, old_value = line.split("=", 1)
+
+            for updated_property, new_value in new_properties.items():
+                if updated_property == property_name:
+                    if new_value != old_value:
+                        lines[line_index] = (property_name + "=" + new_value)
+                        break
+
+        line_index += 1
+
+    updated_content = "\n".join(lines)
+
+    with open(server_path, "w") as file:
+        file.write(updated_content)
     
 def read_logs(server_id, process):
     for line in process.stdout:
