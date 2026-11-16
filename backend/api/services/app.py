@@ -473,10 +473,8 @@ def write_properties(server_id, new_properties):
 
     lines = []
     found_properties = set()
-    line_index = 0
 
-
-    for line in file_content.splitlines():
+    for line_index, line in enumerate(file_content.splitlines()):
         lines.append(line)
 
         if "=" in line:
@@ -484,14 +482,11 @@ def write_properties(server_id, new_properties):
 
             found_properties.add(property_name)
 
-            for updated_property, new_value in new_properties.items():
-                if updated_property == property_name:
-                    if new_value != old_value:
-                        lines[line_index] = (property_name + "=" + new_value)
-                        break
-
-        line_index += 1
-
+            if property_name in new_properties:
+                new_value = new_properties[property_name]
+                if new_value != old_value:
+                    lines[line_index] = (property_name + "=" + new_value)
+                    
     for updated_property, new_value in new_properties.items(): 
         if updated_property not in found_properties:
             lines.append(updated_property + "=" + new_value)
