@@ -1,19 +1,24 @@
 ##### IMPORTS #####
+
+# Standard Library
+import asyncio
+import json
+import os
+import re
+import shutil
+import subprocess
+import threading
+import uuid
+
+# Third-party Libraries
+import requests
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-import uuid
-import json
-import requests
-import os
-import subprocess
-import threading
-import asyncio
-import shutil
-import re
-
+# Local Imports
 from services.config.default_properties import default_properties
+
 
 ##### Pydantic models #####
 class CommandRequest(BaseModel):
@@ -22,10 +27,12 @@ class CommandRequest(BaseModel):
 class PropertiesRequest(BaseModel):
     property: dict[str, str] 
 
+
 ##### SERVER RUNTIME MANAGMENT #####
 running_servers = {}
 server_logs = {}
 log_subscribers = {}
+
 
 ##### API ROUTER #####
 router = APIRouter()
@@ -307,7 +314,6 @@ def patch_properties(server_id, request: PropertiesRequest):
 
     for property, value in new_properties.items():
         if property not in old_properties:
-            print(f"Unknown property: {property}")
             raise HTTPException(
                 status_code=400,
                 detail="Property not found"
@@ -319,8 +325,7 @@ def patch_properties(server_id, request: PropertiesRequest):
 
 @router.post("/api/servers/{server_id}/properties/reset")
 def reset_server_properties(server_id):
-    new_properties = default_properties
-    write_properties(server_id, new_properties)
+    write_properties(server_id, new_properties=default_properties)
     
 
 #==============================#
@@ -352,7 +357,7 @@ def set_eula(server_id: str):
     with open("data/servers/" + server_id + "/eula.txt", "w") as file:
         file.write(content)
 
-    apply_default_properties(server_id)
+    write_properties(server_id, new_properties=default_properties)
 
     return {"message": "EULA was accepted"}
 
@@ -467,13 +472,17 @@ def write_properties(server_id, new_properties):
         file_content = file.read() 
 
     lines = []
+    found_properties = set()
     line_index = 0
+
 
     for line in file_content.splitlines():
         lines.append(line)
 
         if "=" in line:
             property_name, old_value = line.split("=", 1)
+
+            found_properties.add(property_name)
 
             for updated_property, new_value in new_properties.items():
                 if updated_property == property_name:
@@ -482,6 +491,10 @@ def write_properties(server_id, new_properties):
                         break
 
         line_index += 1
+
+    for updated_property, new_value in new_properties.items(): 
+        if updated_property not in found_properties:
+            lines.append(updated_property + "=" + new_value)
 
     updated_content = "\n".join(lines)
 

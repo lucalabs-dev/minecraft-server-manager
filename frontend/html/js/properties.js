@@ -69,10 +69,6 @@ async function saveProperties() {
         );
 
         if (!response.ok) {
-            const error = await response.text();
-            console.error("Status:", response.status);
-            console.error("Backend response:", error);
-
             throw new Error("Could not save properties.");
         }
 
