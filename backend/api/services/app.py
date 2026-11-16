@@ -419,36 +419,6 @@ def initialize_server(server_path):
     )
     process.wait()
 
-def apply_default_properties(server_id):
-    with open("data/servers/" + server_id + "/server.properties", "r") as file:
-        content = file.read()
-
-    lines = []
-    found_settings = []
-
-    for line in content.splitlines():
-        if "=" in line:
-            setting, old_value = line.split("=", 1)
-
-            found_settings.append(setting)
-            
-            if setting in default_properties:
-                new_value = default_properties[setting]
-                line = setting + "=" + new_value
-        lines.append(line)
-
-    for setting in default_properties:
-        if setting not in found_settings:
-            lines.append(setting + "=" + default_properties[setting])
-        
-    content = "\n".join(lines)
-
-    with open("data/servers/" + server_id + "/server.properties", "w") as file:
-        file.write(content)
-
-    
-    return {"message": "Default server properties were applied"}
-
 def parse_properties(server_id):
     server_path = "data/servers/" + server_id + "/server.properties"
 
